@@ -1,10 +1,17 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"io/ioutil"
+);
 
 func main() {
-	fmt.Println("\t.global _main")
-	fmt.Println("_main:");
-	fmt.Println("\tmovl $0, %eax");
+	contents, ok := ioutil.ReadFile ("/dev/stdin")
+	if ok != nil {
+		panic (ok)
+	}
+	fmt.Println("\t.global _mymain")
+	fmt.Println("_mymain:");
+	fmt.Printf("\tmovl $%s, %%eax\n", string(contents));
 	fmt.Println("\tret");
 }
