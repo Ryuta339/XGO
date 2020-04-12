@@ -4,7 +4,7 @@ function test {
 	expected="$1"
 	expr="$2"
 
-	echo -n "$expr" | go run xgo.go > tmp.s
+	echo -n "$expr" | go run xgo.go ast.go > tmp.s
 	gcc -o tmp.out driver.c tmp.s 
 	result="`./tmp.out`"
 

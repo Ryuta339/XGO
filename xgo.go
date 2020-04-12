@@ -5,7 +5,6 @@ import (
 	"io/ioutil"
 	"strings"
 	"regexp"
-	"strconv"
 )
 
 type Token struct {
@@ -13,11 +12,6 @@ type Token struct {
 	sval string
 }
 
-type Ast struct {
-	typ     string
-	ival    int
-	operand *Ast
-}
 
 var tokens [] *Token
 var tokenIndex int
@@ -57,38 +51,21 @@ func readToken () *Token {
 	return nil
 }
 
-func parseUnaryExpr () *Ast {
-	tok := readToken ()
-	ival, _ := strconv.Atoi (tok.sval)
-	return &Ast {
-		typ : "uop",
-		operand: &Ast {
-			typ:  "int",
-			ival: ival,
-		},
-	}
-}
 
-func parseExpr () *Ast {
-	ast := parseUnaryExpr ()
+func parseExpr () Ast {
+	ast := parseUnaryExpression ()
 	return ast
 }
 
-func generate (ast *Ast) {
+func generate (ast Ast) {
 	fmt.Println("\t.global _mymain")
 	fmt.Println("_mymain:");
 	emitAst (ast)
 	fmt.Println("\tret");
 }
 
-func emitAst (ast *Ast) {
-	if ast.typ == "uop" {
-		emitUop (ast)
-	}
-}
-
-func emitUop (ast *Ast) {
-	fmt.Printf ("\tmovl\t$%d, %%eax\n", ast.operand.ival)
+func emitAst (ast Ast) {
+	ast.emit ();
 }
 
 func debugPrint (name string, v interface{}) {
@@ -101,10 +78,8 @@ func debugTokens (tokens []*Token) {
 	}
 }
 
-func debugAst (ast *Ast) {
-	if ast.typ == "uop" {
-		debugPrint ("ast.uop", ast.operand)
-	}
+func debugAst (ast Ast) {
+	ast.debug ();
 }
 
 func main () {
