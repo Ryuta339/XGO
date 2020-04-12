@@ -20,5 +20,6 @@ function test {
 
 test 0 0 
 test 7 7
+test '2 + 5' 7
 
 echo "All tests passed"
