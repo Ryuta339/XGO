@@ -67,7 +67,7 @@ func readNumber (b byte) string {
 }
 
 func isSpace (b byte) bool {
-	return b == ' ' || b == '\t'
+	return b == ' ' || b == '\t' || b == '\n' || b == '\r'
 }
 
 func skipSpace () {
