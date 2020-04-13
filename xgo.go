@@ -103,8 +103,8 @@ func tokinize (s string) []*Token {
 			tok = &Token {typ: "number", sval: val}
 		case c==' ' || c=='\t':
 			skipSpace ()
-			tok = &Token {typ: "space", sval: " "}
-		case c=='+':
+			// tok = &Token {typ: "space", sval: " "}
+		case c=='+' || c=='-':
 			tok = &Token {typ: "punct", sval: fmt.Sprintf ("%c", c)}
 		default:
 			fmt.Printf ("c='%c'\n", c)
@@ -141,7 +141,7 @@ func debugPrint (s string) {
 }
 
 func debugPrintWithVariable (name string, v interface{}) {
-	debugPrint (fmt.Sprintf ("%s=%v\n", name, v))
+	debugPrint (fmt.Sprintf ("%s=%v", name, v))
 }
 
 func debugToken (tok *Token) {

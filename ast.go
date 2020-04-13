@@ -30,6 +30,7 @@ func parseExpression () Ast {
  * ================================ */
 type BinaryExpression struct {
 	SuperAst
+	operator string
 	left     *UnaryExpression
 	right    *UnaryExpression
 }
@@ -38,7 +39,13 @@ type BinaryExpression struct {
 func (b *BinaryExpression) emit () {
 	fmt.Printf ("\tmovl\t$%d, %%ebx\n", b.left.operand.ival);
 	fmt.Printf ("\tmovl\t$%d, %%eax\n", b.right.operand.ival);
-	fmt.Printf ("\taddl\t%%ebx, %%eax\n")
+	var s string
+	if b.operator == "+" {
+		s = "addl"
+	} else if b.operator == "-" {
+		s = "subl"
+	}
+	fmt.Printf ("\t%s\t%%ebx, %%eax\n", s)
 }
 
 // implements Ast
@@ -55,21 +62,19 @@ func parseBinaryExpression () Ast {
 		if tok == nil {
 			return ast
 		}
-		if tok.typ == "space" {
-			continue
-		}
 		if tok.typ != "punct" {
 			return ast
 		}
-		if tok.sval == "+" {
+		if tok.sval == "+" || tok.sval == "-" {
 			right := parseUnaryExpression ()
 			right.debug ()
 			return &BinaryExpression {
 				SuperAst: SuperAst {
 					typ: "binary_expression",
 				},
-				left:  ast,
-				right: right,
+				operator: tok.sval,
+				left:     ast,
+				right:    right,
 			}
 		} else {
 			fmt.Printf ("unknown token%v\n", tok)
@@ -102,9 +107,6 @@ func (u *UnaryExpression) debug () {
 
 func parseUnaryExpression () *UnaryExpression {
 	tok := readToken ()
-	if tok.typ == "space" {
-		tok = readToken ()
-	}
 	ival, _ := strconv.Atoi (tok.sval)
 	return &UnaryExpression {
 		SuperAst: SuperAst{
@@ -135,6 +137,7 @@ func (p *PrimaryExpression) emit () {
 
 // implements Ast
 func (p *PrimaryExpression) debug () {
+	debugPrintWithVariable ("ast.primary_expression", fmt.Sprintf ("%d", p.ival))
 }
 
 func parsePrimaryExpression () Ast {
