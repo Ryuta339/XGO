@@ -44,6 +44,8 @@ func (b *BinaryExpression) emit () {
 		s = "addl"
 	} else if b.operator == "-" {
 		s = "subl"
+	} else if b.operator == "*" {
+		s = "imull"
 	}
 	fmt.Printf ("\t%s\t%%ebx, %%eax\n", s)
 }
@@ -65,7 +67,7 @@ func parseBinaryExpression () Ast {
 		if tok.typ != "punct" {
 			return ast
 		}
-		if tok.sval == "+" || tok.sval == "-" {
+		if tok.sval == "+" || tok.sval == "-" || tok.sval == "*" {
 			right := parseUnaryExpression ()
 			right.debug ()
 			return &BinaryExpression {
