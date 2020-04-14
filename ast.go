@@ -5,59 +5,146 @@ import (
 	"strconv"
 );
 
+var frameHeight int = 0;
 
+
+/*** Interface Definitioin ***/
 
 type Ast interface {
 	emit ()
 	debug ()
 }
 
-type SuperAst struct {
-	typ     string
+type ArithmeticOperator interface {
+	emit ()
+}
+
+
+func emitCode (code string) {
+	fmt.Println (code)
+}
+
+func generate (ast Ast) {
+	emitCode ("\t.global _mymain")
+	emitCode ("_mymain:");
+	ast.emit ()
+	emitCode ("\tpopq\t%rax")
+	frameHeight -= 4
+	emitCode ("\tret");
+}
+
+func debugAst (ast Ast) {
+	ast.debug ()
+}
+
+
+/* ===============================
+ * Arithmetic operators implementation
+ * =============================== */
+type AdditiveOperator struct {
+}
+// implements ArithmeticOperator
+func (ao *AdditiveOperator) emit () {
+	emitCode ("\taddl\t%ebx, %eax")
+}
+
+type SubtractionOperator struct {
+}
+// implements ArithmeticOperator
+func (so *SubtractionOperator) emit () {
+	emitCode ("\tsubl\t%ebx, %eax")
+}
+
+type MultiplicativeOperator struct {
+}
+// implements ArithmeticOperator
+func (mo *MultiplicativeOperator) emit () {
+	emitCode ("\timul\t%ebx, %eax")
+}
+
+type DivisionOperator struct {
+}
+// implements AritheticOperator
+func (do *DivisionOperator) emit () {
+	emitCode ("\tidivl\t%ebx, %eax")
 }
 
 
 
+/* ================================ */
 
 func parseExpression () Ast {
-	ast := parseBinaryExpression ()
+	ast := parseAdditiveExpression ()
 	return ast
 }
 
 
 /* ================================
- * Binary Expression
+ * Arithmetic Expression
  * ================================ */
-type BinaryExpression struct {
-	SuperAst
-	operator string
-	left     *UnaryExpression
-	right    *UnaryExpression
+type ArithmeticExpression struct {
+	operator ArithmeticOperator
+	left     Ast
+	right    Ast
 }
 
 // implements Ast
-func (b *BinaryExpression) emit () {
-	fmt.Printf ("\tmovl\t$%d, %%ebx\n", b.left.operand.ival);
-	fmt.Printf ("\tmovl\t$%d, %%eax\n", b.right.operand.ival);
-	var s string
-	if b.operator == "+" {
-		s = "addl"
-	} else if b.operator == "-" {
-		s = "subl"
-	} else if b.operator == "*" {
-		s = "imull"
+func (ae *ArithmeticExpression) emit () {
+	// emitCode (fmt.Sprintf ("\tmovl\t$%d, %%eax\n", ae.left.operand.ival))
+	// emitCode (fmt.Sprintf ("\tmovl\t$%d, %%ebx\n", ae.right.operand.ival))
+	ae.left.emit ()
+	ae.right.emit ()
+	emitCode ("\tpopq\t%rbx")
+	emitCode ("\tpopq\t%rax")
+	frameHeight -= 8
+	ae.operator.emit ()
+	emitCode ("\tpushq\t%rax")
+	frameHeight += 4
+}
+
+// implements Ast
+func (ae *ArithmeticExpression) debug () {
+	debugPrint ("ast.arithmetic_exression")
+	ae.left.debug ()
+	ae.right.debug ()
+}
+
+func parseAdditiveExpression () Ast {
+	ast := parseMultiplicativeExpression ()
+	for {
+		tok := readToken ()
+		if tok == nil {
+			return ast
+		}
+		if tok.typ != "punct" {
+			return ast
+		}
+		if tok.sval == "+" {
+			right := parseMultiplicativeExpression ()
+			right.debug ()
+			return &ArithmeticExpression {
+				operator: &AdditiveOperator {},
+				left:     ast,
+				right:    right,
+			}
+		} else if tok.sval == "-" {
+			right := parseMultiplicativeExpression ()
+			right.debug ()
+			return &ArithmeticExpression {
+				operator: &SubtractionOperator {},
+				left:     ast,
+				right:    right,
+			}
+		} else {
+			fmt.Printf ("unknown token %v in parseAdditiveExpression\n", tok)
+			debugToken (tok)
+			panic ("internal error")
+		}
 	}
-	fmt.Printf ("\t%s\t%%ebx, %%eax\n", s)
+	return ast
 }
 
-// implements Ast
-func (b *BinaryExpression) debug () {
-	debugPrintWithVariable ("ast.binary_exression", b.typ)
-	b.left.debug ()
-	b.right.debug ()
-}
-
-func parseBinaryExpression () Ast {
+func parseMultiplicativeExpression () Ast {
 	ast := parseUnaryExpression ()
 	for {
 		tok := readToken ()
@@ -67,19 +154,28 @@ func parseBinaryExpression () Ast {
 		if tok.typ != "punct" {
 			return ast
 		}
-		if tok.sval == "+" || tok.sval == "-" || tok.sval == "*" {
+		switch tok.sval {
+		case "*":
 			right := parseUnaryExpression ()
 			right.debug ()
-			return &BinaryExpression {
-				SuperAst: SuperAst {
-					typ: "binary_expression",
-				},
-				operator: tok.sval,
+			return &ArithmeticExpression {
+				operator: &MultiplicativeOperator {},
 				left:     ast,
 				right:    right,
 			}
-		} else {
-			fmt.Printf ("unknown token%v\n", tok)
+		case "/" :
+			right := parseUnaryExpression ()
+			right.debug ()
+			return &ArithmeticExpression {
+				operator: &DivisionOperator {},
+				left:     ast,
+				right:    right,
+			}
+		case "+", "-":
+			unreadToken ()
+			return ast
+		default:
+			fmt.Printf ("unknown token %v.\n", tok)
 			debugToken (tok)
 			panic ("internal error")
 		}
@@ -87,19 +183,18 @@ func parseBinaryExpression () Ast {
 	return ast
 }
 
-
 /* ================================
  * Unary Expression 
  * ================================ */
 type UnaryExpression struct {
-	SuperAst
 	operand *PrimaryExpression
 }
 
 
 // implements Ast
 func (u *UnaryExpression) emit () {
-	fmt.Printf ("\tmovl\t$%d, %%eax\n", u.operand.ival);
+	emitCode (fmt.Sprintf ("\tpushq\t$%d", u.operand.ival))
+	frameHeight += 4
 }
 
 // implements Ast
@@ -111,13 +206,8 @@ func parseUnaryExpression () *UnaryExpression {
 	tok := readToken ()
 	ival, _ := strconv.Atoi (tok.sval)
 	return &UnaryExpression {
-		SuperAst: SuperAst{
-			typ : "unary_expression",
-		},
 		operand: &PrimaryExpression {
-			SuperAst: SuperAst{
-				typ:  "int",
-			},
+			typ:  "int",
 			ival: ival,
 		},
 	}
@@ -128,7 +218,7 @@ func parseUnaryExpression () *UnaryExpression {
  * Primary Expression 
  * ================================ */
 type PrimaryExpression struct {
-	SuperAst
+	typ     string
 	ival    int
 }
 

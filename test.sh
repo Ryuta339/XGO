@@ -1,10 +1,10 @@
 #!/bin/bash
 
 function test {
-	expected="$1"
-	expr="$2"
+	expected="$2"
+	expr="$1"
 
-	echo -n "$expr" | go run xgo.go ast.go > tmp.s
+	echo -n "$expr" | go run xgo.go token.go ast.go > tmp.s
 	gcc -o tmp.out driver.c tmp.s 
 	result="`./tmp.out`"
 
