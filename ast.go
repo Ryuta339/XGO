@@ -5,7 +5,6 @@ import (
 	"strconv"
 );
 
-var frameHeight int = 0;
 
 
 /*** Interface Definitioin ***/
@@ -17,20 +16,6 @@ type Ast interface {
 
 type ArithmeticOperator interface {
 	emit ()
-}
-
-
-func emitCode (code string) {
-	fmt.Println (code)
-}
-
-func generate (ast Ast) {
-	emitCode ("\t.global _mymain")
-	emitCode ("_mymain:");
-	ast.emit ()
-	emitCode ("\tpopq\t%rax")
-	frameHeight -= 4
-	emitCode ("\tret");
 }
 
 func debugAst (ast Ast) {
@@ -45,28 +30,30 @@ type AdditiveOperator struct {
 }
 // implements ArithmeticOperator
 func (ao *AdditiveOperator) emit () {
-	emitCode ("\taddl\t%ebx, %eax")
+	emitCode ("\taddl\t%%ebx, %%eax")
 }
 
 type SubtractionOperator struct {
 }
 // implements ArithmeticOperator
 func (so *SubtractionOperator) emit () {
-	emitCode ("\tsubl\t%ebx, %eax")
+	emitCode ("\tsubl\t%%ebx, %%eax")
 }
 
 type MultiplicativeOperator struct {
 }
 // implements ArithmeticOperator
 func (mo *MultiplicativeOperator) emit () {
-	emitCode ("\timul\t%ebx, %eax")
+	emitCode ("\tpushq\t%%rdx")
+	emitCode ("\timul\t%%ebx, %%eax")
+	emitCode ("\tpopq\t%%rdx")
 }
 
 type DivisionOperator struct {
 }
 // implements AritheticOperator
 func (do *DivisionOperator) emit () {
-	emitCode ("\tidivl\t%ebx, %eax")
+	emitCode ("\tidivl\t%%ebx, %%eax")
 }
 
 
@@ -90,15 +77,15 @@ type ArithmeticExpression struct {
 
 // implements Ast
 func (ae *ArithmeticExpression) emit () {
-	// emitCode (fmt.Sprintf ("\tmovl\t$%d, %%eax\n", ae.left.operand.ival))
+	// emitCode (fmt.Sprintf ("\tmovl\t$%%d, %%%eax\n", ae.left.operand.ival))
 	// emitCode (fmt.Sprintf ("\tmovl\t$%d, %%ebx\n", ae.right.operand.ival))
 	ae.left.emit ()
 	ae.right.emit ()
-	emitCode ("\tpopq\t%rbx")
-	emitCode ("\tpopq\t%rax")
+	emitCode ("\tpopq\t%%rbx")
+	emitCode ("\tpopq\t%%rax")
 	frameHeight -= 8
 	ae.operator.emit ()
-	emitCode ("\tpushq\t%rax")
+	emitCode ("\tpushq\t%%rax")
 	frameHeight += 4
 }
 
@@ -193,7 +180,7 @@ type UnaryExpression struct {
 
 // implements Ast
 func (u *UnaryExpression) emit () {
-	emitCode (fmt.Sprintf ("\tpushq\t$%d", u.operand.ival))
+	emitCode ("\tpushq\t$%d", u.operand.ival)
 	frameHeight += 4
 }
 

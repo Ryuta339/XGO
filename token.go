@@ -69,8 +69,11 @@ func isPunctuation (b byte) bool {
 }
 
 func isNumber (b byte) bool {
-	debugPrint (fmt.Sprintf ("is_numeric %c", b))
-	return '0' <= b && b <= '9'
+	ret := '0'<=b && b<='9'
+	if ret {
+		debugPrint (fmt.Sprintf ("is_numeric %c", b))
+	}
+	return ret
 }
 
 func readNumber (b byte) string {
@@ -143,12 +146,10 @@ func readString () string {
 			panic ("invalid string literal")
 		}
 		if c == '\\' {
-			// この辺なんか気持ち悪い
 			c, err = getc ()
 			bytes = append (bytes, c)
 			continue
 		} else if c == '"' {
-			// この辺なんか気持ち悪い
 			return string (bytes)
 		} else {
 			bytes = append (bytes, c)
