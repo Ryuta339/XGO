@@ -198,10 +198,10 @@ func tokenize (s string) []*Token {
 			return r
 		case isNumber (c):
 			sval := readNumber (c)
-			tok = &Token {typ: "number", sval: sval}
+			tok = &Token {typ: "int", sval: sval}
 		case c=='\'':
 			sval := readChar ()
-			tok = &Token {typ: "char", sval: sval}
+			tok = &Token {typ: "rune", sval: sval}
 		case c=='"':
 			sval := readString ()
 			tok = &Token {typ: "string", sval: sval}

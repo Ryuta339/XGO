@@ -7,7 +7,7 @@ import (
 
 
 
-/*** Interface Definitioin ***/
+/*** interface definitioins ***/
 
 type Ast interface {
 	emit ()
@@ -15,8 +15,15 @@ type Ast interface {
 }
 
 type ArithmeticOperator interface {
-	emit ()
+	emitOperator ()
 }
+
+type Constant interface {
+	emitConstant ()
+}
+
+
+/*** default functions ***/
 
 func debugAst (ast Ast) {
 	ast.debug ()
@@ -29,21 +36,21 @@ func debugAst (ast Ast) {
 type AdditiveOperator struct {
 }
 // implements ArithmeticOperator
-func (ao *AdditiveOperator) emit () {
+func (ao *AdditiveOperator) emitOperator () {
 	emitCode ("\taddl\t%%ebx, %%eax")
 }
 
 type SubtractionOperator struct {
 }
 // implements ArithmeticOperator
-func (so *SubtractionOperator) emit () {
+func (so *SubtractionOperator) emitOperator () {
 	emitCode ("\tsubl\t%%ebx, %%eax")
 }
 
 type MultiplicativeOperator struct {
 }
 // implements ArithmeticOperator
-func (mo *MultiplicativeOperator) emit () {
+func (mo *MultiplicativeOperator) emitOperator () {
 	emitCode ("\tpushq\t%%rdx")
 	emitCode ("\timul\t%%ebx, %%eax")
 	emitCode ("\tpopq\t%%rdx")
@@ -52,10 +59,29 @@ func (mo *MultiplicativeOperator) emit () {
 type DivisionOperator struct {
 }
 // implements AritheticOperator
-func (do *DivisionOperator) emit () {
+func (do *DivisionOperator) emitOperator () {
 	emitCode ("\tidivl\t%%ebx, %%eax")
 }
 
+
+/* ===============================
+ * Constants implementation
+ * =============================== */
+type RuneConstant struct {
+	rval rune
+}
+// implements Constant
+func (rc *RuneConstant) emitConstant () {
+	emitCode ("\tpushq\t$%d", rc.rval)
+}
+
+type IntegerConstant struct {
+	ival int
+}
+// implements Constant
+func (ic *IntegerConstant) emitConstant () {
+	emitCode ("\tpushq\t$%d", ic.ival)
+}
 
 
 /* ================================ */
@@ -68,6 +94,7 @@ func parseExpression () Ast {
 
 /* ================================
  * Arithmetic Expression
+ *     implements Ast
  * ================================ */
 type ArithmeticExpression struct {
 	operator ArithmeticOperator
@@ -84,20 +111,20 @@ func (ae *ArithmeticExpression) emit () {
 	emitCode ("\tpopq\t%%rbx")
 	emitCode ("\tpopq\t%%rax")
 	frameHeight -= 8
-	ae.operator.emit ()
+	ae.operator.emitOperator ()
 	emitCode ("\tpushq\t%%rax")
 	frameHeight += 4
 }
 
 // implements Ast
 func (ae *ArithmeticExpression) debug () {
-	debugPrint ("ast.arithmetic_exression")
+	debugPrint ("ast.arithmetic_expression")
 	ae.left.debug ()
 	ae.right.debug ()
 }
 
 func parseAdditiveExpression () Ast {
-	ast := parseMultiplicativeExpression ()
+	var ast Ast = parseMultiplicativeExpression ()
 	for {
 		tok := readToken ()
 		if tok == nil {
@@ -106,33 +133,36 @@ func parseAdditiveExpression () Ast {
 		if tok.typ != "punct" {
 			return ast
 		}
-		if tok.sval == "+" {
+		switch tok.sval {
+		case "+":
 			right := parseMultiplicativeExpression ()
 			right.debug ()
-			return &ArithmeticExpression {
+			ast = &ArithmeticExpression {
 				operator: &AdditiveOperator {},
 				left:     ast,
 				right:    right,
 			}
-		} else if tok.sval == "-" {
+		case "-":
 			right := parseMultiplicativeExpression ()
 			right.debug ()
-			return &ArithmeticExpression {
+			ast = &ArithmeticExpression {
 				operator: &SubtractionOperator {},
 				left:     ast,
 				right:    right,
 			}
-		} else {
-			fmt.Printf ("unknown token %v in parseAdditiveExpression\n", tok)
-			debugToken (tok)
-			panic ("internal error")
+		default:
+			// fmt.Printf ("unknown token %v in parseAdditiveExpression\n", tok)
+			// debugToken (tok)
+			// panic ("internal error")
+			unreadToken ()
+			return ast
 		}
 	}
 	return ast
 }
 
 func parseMultiplicativeExpression () Ast {
-	ast := parseUnaryExpression ()
+	var ast Ast = parseUnaryExpression ()
 	for {
 		tok := readToken ()
 		if tok == nil {
@@ -145,7 +175,7 @@ func parseMultiplicativeExpression () Ast {
 		case "*":
 			right := parseUnaryExpression ()
 			right.debug ()
-			return &ArithmeticExpression {
+			ast = &ArithmeticExpression {
 				operator: &MultiplicativeOperator {},
 				left:     ast,
 				right:    right,
@@ -153,7 +183,7 @@ func parseMultiplicativeExpression () Ast {
 		case "/" :
 			right := parseUnaryExpression ()
 			right.debug ()
-			return &ArithmeticExpression {
+			ast = &ArithmeticExpression {
 				operator: &DivisionOperator {},
 				left:     ast,
 				right:    right,
@@ -162,9 +192,11 @@ func parseMultiplicativeExpression () Ast {
 			unreadToken ()
 			return ast
 		default:
-			fmt.Printf ("unknown token %v.\n", tok)
-			debugToken (tok)
-			panic ("internal error")
+			// fmt.Printf ("unknown token %v.\n", tok)
+			// debugToken (tok)
+			// panic ("internal error")
+			unreadToken ()
+			return ast
 		}
 	}
 	return ast
@@ -172,53 +204,108 @@ func parseMultiplicativeExpression () Ast {
 
 /* ================================
  * Unary Expression 
+ *     implements Ast
  * ================================ */
 type UnaryExpression struct {
-	operand *PrimaryExpression
+//	operand *PrimaryExpression
+	operand Ast
 }
 
 
 // implements Ast
 func (u *UnaryExpression) emit () {
-	emitCode ("\tpushq\t$%d", u.operand.ival)
+	// emitCode ("\tpushq\t$%d", u.operand.ival)
+	u.operand.emit ()
 	frameHeight += 4
 }
 
 // implements Ast
 func (u *UnaryExpression) debug () {
-	debugPrintWithVariable ("ast.unary_expression", u.operand);
+	debugPrint ("ast.unary_expression");
 }
 
 func parseUnaryExpression () *UnaryExpression {
-	tok := readToken ()
-	ival, _ := strconv.Atoi (tok.sval)
+	ast := parsePrimaryExpression ()
+	ast.debug ()
 	return &UnaryExpression {
-		operand: &PrimaryExpression {
-			typ:  "int",
-			ival: ival,
-		},
+		operand: ast,
 	}
 }
 
 
 /* ================================
  * Primary Expression 
+ *     implements Ast
  * ================================ */
 type PrimaryExpression struct {
-	typ     string
-	ival    int
+	child Ast
 }
 
 
 // implements Ast
-func (p *PrimaryExpression) emit () {
+func (pe *PrimaryExpression) emit () {
+	pe.child.emit ()
 }
 
 // implements Ast
-func (p *PrimaryExpression) debug () {
-	debugPrintWithVariable ("ast.primary_expression", fmt.Sprintf ("%d", p.ival))
+func (pe *PrimaryExpression) debug () {
+	debugPrint ("ast.primary_expression")
 }
 
 func parsePrimaryExpression () Ast {
+	ast := parseConstant ()
+	ast.debug ()
+	return &PrimaryExpression {
+		child: ast,
+	}
+}
+
+
+
+/* ================================
+ * AstConstant
+ *     implements Ast
+ * ================================ */
+type AstConstant struct {
+	constant Constant
+}
+
+// implements Ast
+func (ac *AstConstant) emit () {
+	ac.constant.emitConstant ()
+}
+
+func (ac *AstConstant) debug () {
+	debugPrintWithVariable ("ast.constant", ac.constant)
+}
+
+func parseConstant () Ast {
+	tok := readToken ()
+	if tok == nil {
+		fmt.Printf ("tok is nil\n")
+		panic ("internal error")
+	}
+	switch (tok.typ) {
+	case "int":
+		ival, _ := strconv.Atoi (tok.sval)
+		return &AstConstant {
+			constant: &IntegerConstant {
+				ival: ival,
+			},
+		}
+	case "rune":
+		rarr := []rune (tok.sval)
+		return &AstConstant {
+			constant: &RuneConstant {
+				rval: rarr[0],
+			},
+		}
+	case "string":
+		return nil
+	default:
+		fmt.Printf ("unknown token %v in parseConstant\n", tok)
+		debugToken (tok)
+		panic ("internal error")
+	}
 	return nil
 }
