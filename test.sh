@@ -24,5 +24,7 @@ test 7 7
 test '2 + 5' 7
 test '10 - 4' 6
 test '4 * 3' 12
+test '1 * 2 + 3 * 4' 14
+test '1 + 2 * 3 + 4' 11
 
 echo "All tests passed"
