@@ -84,11 +84,44 @@ func (ic *IntegerConstant) emitConstant () {
 }
 
 
-/* ================================ */
+/* ================================================================ */
 
 func parseExpression () Ast {
 	ast := parseAdditiveExpression ()
 	return ast
+}
+
+
+
+/* ================================
+ * Assignment Expression
+ *     implements Ast
+ * ================================ */
+type AssignmentExpression struct {
+	left  AstSymbol
+	right Ast
+}
+
+// implements Ast
+func (ae *AssignmentExpression) emit () {
+	ae.right.emit ()
+	ae.left.emitLeft ()
+
+	emitCode ("\tpopq\t%%rax")
+	emitCode ("\tmovq\t0(%%rsp), %%rcx")
+	emitCode ("\tmovq\t%%rcx, 0(%%rax)")
+	frameHeight -= 8
+}
+
+// implements Ast
+func (ae *AssignmentExpression) debug () {
+	debugPrint ("assignment_expression")
+	ae.left.debug ()
+	ae.right.debug ()
+}
+
+func parseAssignmentExpression () Ast {
+	return nil
 }
 
 
@@ -253,10 +286,27 @@ func (pe *PrimaryExpression) debug () {
 }
 
 func parsePrimaryExpression () Ast {
-	ast := parseConstant ()
-	ast.debug ()
-	return &PrimaryExpression {
-		child: ast,
+	tok := readToken ()
+	if tok == nil {
+		return nil
+	}
+	unreadToken ()
+	switch tok.typ {
+	case "int":
+		ast := parseConstant ()
+		ast.debug ()
+		return &PrimaryExpression {
+			child: ast,
+		}
+	case "symbol":
+		ast := parseSymbol ()
+		ast.debug ()
+		return &PrimaryExpression {
+			child: ast,
+		}
+	default:
+		fmt.Printf ("Unexpected token %v.\n", tok.sval)
+		panic ("internal error")
 	}
 }
 
@@ -309,3 +359,49 @@ func parseConstant () Ast {
 	}
 	return nil
 }
+
+
+
+
+/* ================================
+ * AstSymbol
+ *     implements Ast
+ * ================================ */
+type AstSymbol struct {
+	symbol *Symbol
+}
+
+func (as *AstSymbol) emitLeft () {
+	as.symbol.emitSymbol (LEFT)
+}
+
+// implements Ast
+func (as *AstSymbol) emit () {
+	as.symbol.emitSymbol (RIGHT)
+}
+
+// implements Ast 
+func (as *AstSymbol) debug () {
+	debugPrintWithVariable ("ast.symbol", as.symbol.name)
+}
+
+func parseSymbol () *AstSymbol {
+	tok := readToken ()
+	if tok == nil {
+		fmt.Printf ("tok is nil\n")
+		panic ("internal error")
+	}
+	if tok.typ == "symbol" {
+		sym := findSymbol (tok.sval)
+		if sym == nil {
+			sym = makeSymbol (tok.sval, "int")
+		}
+		return &AstSymbol {
+			symbol: sym,
+		}
+	} else {
+		fmt.Println ("Unexpected token %v.\n", tok.sval)
+		panic ("internal error")
+	}
+}
+

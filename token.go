@@ -24,6 +24,28 @@ func readToken () *Token {
 	return nil
 }
 
+func lookahead (num int) *Token {
+	idx := tokenIndex + num
+	if idx <= len (tokens)-1 {
+		return tokens[idx]
+	}
+	return nil
+}
+
+func consumeToken (expected string) {
+	tok := lookahead (1)
+	if tok == nil {
+		fmt.Printf ("Unexpected termination.\n")
+		panic ("internal error")
+	}
+	if (expected == tok.sval) {
+		readToken ()
+	} else {
+		fmt.Printf ("Unexpected token %v.\n", tok.sval)
+		panic ("internal error")
+	}
+}
+
 func unreadToken () {
 	if tokenIndex >= 0 {
 		tokenIndex --
@@ -113,12 +135,13 @@ func skipSpace () {
 	}
 }
 
-func isName (b byte) bool {
-	return b == '_' || isAlphabet (b)
-}
 
 func isAlphabet (b byte) bool {
 	return ('A'<=b && b<='Z') || ('a'<=b && b<='z')
+}
+
+func isName (b byte) bool {
+	return b == '_' || isAlphabet (b)
 }
 
 func readName (b byte) string {
@@ -211,9 +234,12 @@ func tokenize (s string) []*Token {
 			// tok = &Token {typ: "space", sval: " "}
 		case isPunctuation (c):
 			tok = &Token {typ: "punct", sval: fmt.Sprintf ("%c", c)}
+		case c=='=':
+			tok = &Token {typ: "assignment", sval: fmt.Sprintf ("%c", c)}
 		default:
-			fmt.Printf ("c='%c'\n", c)
-			panic ("unknown char")
+			sval := readName (c)
+			tok = &Token {typ: "symbol", sval: sval}
+			makeSymbol (sval, "int")
 		}
 		debugToken (tok)
 		r = append (r, tok)
