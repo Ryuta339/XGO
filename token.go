@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+//	"io/ioutil"
 	"strings"
 	"errors"
 	"os"
@@ -12,6 +13,13 @@ type Token struct {
 	typ  string
 	sval string
 }
+
+
+var tokens [] *Token
+var tokenIndex int
+var source string
+var sourceIndex int
+
 
 
 
@@ -245,3 +253,19 @@ func tokenize (s string) []*Token {
 		r = append (r, tok)
 	}
 }
+
+
+
+
+func renderTokens (tokens []*Token) {
+	debugPrint ("==== Start Dump Tokens ====")
+	for _, tok := range tokens {
+		if tok.typ == "string" {
+			fmt.Fprintf (os.Stderr, "\"%s\"\n", tok.sval)
+		} else {
+			fmt.Fprintf (os.Stderr, "%s\n", tok.sval)
+		}
+	}
+	debugPrint ("==== End Dump Tokens ====")
+}
+

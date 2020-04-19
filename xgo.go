@@ -7,10 +7,6 @@ import (
 )
 
 
-var tokens [] *Token
-var tokenIndex int
-var source string
-var sourceIndex int
 var debugMode = false
 
 
@@ -30,18 +26,6 @@ func debugPrint (s string) {
 
 func debugPrintWithVariable (name string, v interface{}) {
 	debugPrint (fmt.Sprintf ("%s=%v", name, v))
-}
-
-func renderTokens (tokens []*Token) {
-	debugPrint ("==== Start Dump Tokens ====")
-	for _, tok := range tokens {
-		if tok.typ == "string" {
-			fmt.Fprintf (os.Stderr, "\"%s\"\n", tok.sval)
-		} else {
-			fmt.Fprintf (os.Stderr, "%s\n", tok.sval)
-		}
-	}
-	debugPrint ("==== End Dump Tokens ====")
 }
 
 func main () {
