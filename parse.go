@@ -5,6 +5,9 @@ import (
 	"strconv"
 )
 
+var stringIndex = 0
+var stringList [] Ast
+
 
 func parseExpression () Ast {
 	ast := parseAdditiveExpression ()
@@ -14,6 +17,7 @@ func parseExpression () Ast {
 func parseAssignmentExpression () Ast {
 	return nil
 }
+
 
 func parseAdditiveExpression () Ast {
 	var ast Ast = parseMultiplicativeExpression ()
@@ -43,9 +47,6 @@ func parseAdditiveExpression () Ast {
 				right:    right,
 			}
 		default:
-			// fmt.Printf ("unknown token %v in parseAdditiveExpression\n", tok)
-			// debugToken (tok)
-			// panic ("internal error")
 			unreadToken ()
 			return ast
 		}
@@ -84,9 +85,6 @@ func parseMultiplicativeExpression () Ast {
 			unreadToken ()
 			return ast
 		default:
-			// fmt.Printf ("unknown token %v.\n", tok)
-			// debugToken (tok)
-			// panic ("internal error")
 			unreadToken ()
 			return ast
 		}
@@ -96,38 +94,52 @@ func parseMultiplicativeExpression () Ast {
 
 
 func parseUnaryExpression () *UnaryExpression {
-	ast := parsePrimaryExpression ()
-	ast.debug ()
-	return &UnaryExpression {
-		operand: ast,
+	tok := lookahead (1)
+	var ast Ast
+
+	switch tok.typ {
+	case "int", "rune", "string", "identifier":
+		ast = parsePrimaryExpression ()
+		ast.debug ()
+		return &UnaryExpression {
+			operand: ast,
+		}
+	default:
+		fmt.Printf ("Unexpected token %v in parseUnaryExpression.\n", tok.sval)
+		panic ("internal error")
 	}
+	debugPrint ("nil")
+
+	return nil
 }
 
 
-
 func parsePrimaryExpression () Ast {
-	tok := readToken ()
+	tok := lookahead (1)
 	if tok == nil {
 		return nil
 	}
-	unreadToken ()
 	switch tok.typ {
-	case "int":
+	case "int", "rune", "string":
 		ast := parseConstant ()
 		ast.debug ()
 		return &PrimaryExpression {
 			child: ast,
 		}
-	case "symbol":
-		ast := parseSymbol ()
+	case "identifier":
+		ast := parseIdentifierOrFuncall (tok.sval)
 		ast.debug ()
 		return &PrimaryExpression {
 			child: ast,
 		}
 	default:
-		fmt.Printf ("Unexpected token %v.\n", tok.sval)
+		fmt.Printf ("Unexpected token %v in parsePrimaryExpression.\n", tok.sval)
 		panic ("internal error")
 	}
+
+
+
+	return nil
 }
 
 func parseConstant () Ast {
@@ -152,7 +164,13 @@ func parseConstant () Ast {
 			},
 		}
 	case "string":
-		return nil
+		ast :=  &AstString {
+			sval: tok.sval,
+			slabel: fmt.Sprintf ("L%d", stringIndex),
+		}
+		stringIndex ++
+		stringList = append (stringList, ast)
+		return ast
 	default:
 		fmt.Printf ("unknown token %v in parseConstant\n", tok)
 		debugToken (tok)
@@ -161,7 +179,7 @@ func parseConstant () Ast {
 	return nil
 }
 
-func parseSymbol () *AstSymbol {
+func parseSymbol () *Identifier {
 	tok := readToken ()
 	if tok == nil {
 		fmt.Printf ("tok is nil\n")
@@ -172,12 +190,29 @@ func parseSymbol () *AstSymbol {
 		if sym == nil {
 			sym = makeSymbol (tok.sval, "int")
 		}
-		return &AstSymbol {
+		return &Identifier {
 			symbol: sym,
 		}
 	} else {
-		fmt.Println ("Unexpected token %v.\n", tok.sval)
+		fmt.Println ("Unexpected token %v in parseSymbol.\n", tok.sval)
 		panic ("internal error")
 	}
 }
 
+
+func parseIdentifierOrFuncall (name string) Ast {
+	tok := readToken ()
+	if tok != nil && tok.typ == "punct" && tok.sval == "(" {
+		arg1 := parseExpression ()
+		consumeToken (",")
+		arg2 := parseExpression ()
+		consumeToken (")")
+		return &FunCall {
+			fname : name,
+			args  : []Ast{arg1, arg2},
+		}
+	}
+
+	fmt.Println ("TBD")
+	return nil
+}

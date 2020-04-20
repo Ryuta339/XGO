@@ -1,5 +1,9 @@
 package main
 
+import (
+	"fmt"
+)
+
 
 
 
@@ -7,6 +11,7 @@ package main
 
 type Ast interface {
 	emit ()
+	show (depth int)
 	debug ()
 }
 
@@ -20,6 +25,14 @@ type Constant interface {
 
 
 /*** default functions ***/
+func printSpace (n int) {
+	fmt.Printf ("%*s", n, "")
+}
+
+
+func showAst (ast Ast, depth int) {
+	ast.show (depth)
+}
 
 func debugAst (ast Ast) {
 	ast.debug ()
@@ -91,7 +104,7 @@ func (ic *IntegerConstant) emitConstant () {
  *     implements Ast
  * ================================ */
 type AssignmentExpression struct {
-	left  AstSymbol
+	left  Identifier
 	right Ast
 }
 
@@ -111,6 +124,14 @@ func (ae *AssignmentExpression) debug () {
 	debugPrint ("assignment_expression")
 	ae.left.debug ()
 	ae.right.debug ()
+}
+
+//implements Ast
+func (ae *AssignmentExpression) show (depth int) {
+	printSpace (depth)
+	fmt.Printf ("AssignmentExpression\n")
+	ae.left.show (depth+1)
+	ae.right.show (depth+1)
 }
 
 
@@ -146,6 +167,14 @@ func (ae *ArithmeticExpression) debug () {
 	ae.right.debug ()
 }
 
+// implements Ast
+func (ae *ArithmeticExpression) show (depth int) {
+	printSpace (depth)
+	fmt.Printf ("ArithemeticExpression\n")
+	ae.left.show (depth+1)
+	ae.right.show (depth+1)
+}
+
 
 /* ================================
  * Unary Expression 
@@ -157,15 +186,22 @@ type UnaryExpression struct {
 }
 
 // implements Ast
-func (u *UnaryExpression) emit () {
+func (ue *UnaryExpression) emit () {
 	// emitCode ("\tpushq\t$%d", u.operand.ival)
-	u.operand.emit ()
-	frameHeight += 4
+	ue.operand.emit ()
 }
 
 // implements Ast
-func (u *UnaryExpression) debug () {
+func (ue *UnaryExpression) debug () {
 	debugPrint ("ast.unary_expression");
+	ue.operand.debug ()
+}
+
+// implements Ast
+func (ue *UnaryExpression) show (depth int) {
+	printSpace (depth)
+	fmt.Printf ("UnaryExpression\n")
+	ue.operand.show (depth+1)
 }
 
 
@@ -188,6 +224,13 @@ func (pe *PrimaryExpression) debug () {
 	debugPrint ("ast.primary_expression")
 }
 
+// implements Ast
+func (pe *PrimaryExpression) show (depth int) {
+	printSpace (depth)
+	fmt.Printf ("PrimaryExpression\n")
+	pe.child.show (depth+1)
+}
+
 
 /* ================================
  * AstConstant
@@ -202,31 +245,94 @@ func (ac *AstConstant) emit () {
 	ac.constant.emitConstant ()
 }
 
+// implements Ast
 func (ac *AstConstant) debug () {
 	debugPrintWithVariable ("ast.constant", ac.constant)
+}
+
+// implements Ast
+func (ac *AstConstant) show (depth int) {
+	printSpace (depth)
+	fmt.Printf ("AstConstant\n")
+}
+
+
+/* ================================
+ * Identifier
+ *     implements Ast
+ * ================================ */
+type Identifier struct {
+	symbol *Symbol
+}
+
+func (id *Identifier) emitLeft () {
+	id.symbol.emitSymbol (LEFT)
+}
+
+// implements Ast
+func (id *Identifier) emit () {
+	id.symbol.emitSymbol (RIGHT)
+}
+
+// implements Ast 
+func (id *Identifier) debug () {
+	debugPrintWithVariable ("ast.identifier", id.symbol.name)
+}
+
+// implemebts Ast
+func (id *Identifier) show (depth int) {
+	printSpace (depth)
+	fmt.Printf ("Identifier")
+}
+
+
+/* ================================
+ * FunCall
+ *     implements Ast
+ * ================================ */
+type FunCall struct {
+	fname string
+	args  []Ast
+}
+
+// implements Ast
+func (fc *FunCall) emit () {
+}
+
+// implements Ast
+func (fc *FunCall) debug () {
+}
+
+// implements Ast
+func (fc *FunCall) show (depth int) {
+	printSpace (depth)
+	fmt.Printf ("FunCall\n")
+	for _, v := range fc.args {
+		v.show (depth+1)
+	}
 }
 
 
 
 /* ================================
- * AstSymbol
+ * AstString
  *     implements Ast
  * ================================ */
-type AstSymbol struct {
-	symbol *Symbol
+type AstString struct {
+	sval   string
+	slabel string
 }
 
-func (as *AstSymbol) emitLeft () {
-	as.symbol.emitSymbol (LEFT)
+// implement Ast
+func (as *AstString) emit () {
 }
 
-// implements Ast
-func (as *AstSymbol) emit () {
-	as.symbol.emitSymbol (RIGHT)
+// implement Ast
+func (as *AstString) debug () {
 }
 
-// implements Ast 
-func (as *AstSymbol) debug () {
-	debugPrintWithVariable ("ast.symbol", as.symbol.name)
+// implements ast
+func (as *AstString) show (depth int) {
+	printSpace (depth)
+	fmt.Printf ("AstString (%s)\n", as.sval)
 }
-

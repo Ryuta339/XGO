@@ -26,6 +26,7 @@ var sourceIndex int
 func readToken () *Token {
 	if tokenIndex <= len (tokens)-1 {
 		r := tokens[tokenIndex]
+		fmt.Printf ("# read token %v.\n", r)
 		tokenIndex ++
 		return r
 	}
@@ -33,7 +34,7 @@ func readToken () *Token {
 }
 
 func lookahead (num int) *Token {
-	idx := tokenIndex + num
+	idx := tokenIndex + num - 1
 	if idx <= len (tokens)-1 {
 		return tokens[idx]
 	}
@@ -57,6 +58,7 @@ func consumeToken (expected string) {
 func unreadToken () {
 	if tokenIndex >= 0 {
 		tokenIndex --
+		fmt.Printf ("# unread token %v\n", tokens[tokenIndex])
 	}
 }
 

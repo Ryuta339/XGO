@@ -45,8 +45,13 @@ func main () {
 		panic ("no tokens")
 	}
 	tokenIndex = 0
-	debugTokens (tokens)
+	if debugMode {
+		debugPrint ("==== Start Dump Tokens ====")
+		debugTokens (tokens)
+		debugPrint ("==== End Dump Tokens ====")
+	}
 	ast := parseExpression ()
-	debugAst (ast)
-	generate (ast)
+	showAst (ast, 0)
+	// debugAst (ast)
+	// generate (ast)
 }
