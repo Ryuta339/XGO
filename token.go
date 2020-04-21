@@ -248,7 +248,7 @@ func tokenize (s string) []*Token {
 			tok = &Token {typ: "assignment", sval: fmt.Sprintf ("%c", c)}
 		default:
 			sval := readName (c)
-			tok = &Token {typ: "symbol", sval: sval}
+			tok = &Token {typ: "identifier", sval: sval}
 			makeSymbol (sval, "int")
 		}
 		debugToken (tok)

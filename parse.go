@@ -6,7 +6,7 @@ import (
 )
 
 var stringIndex = 0
-var stringList [] Ast
+var stringList [] *AstString
 
 
 func parseExpression () Ast {
@@ -127,7 +127,7 @@ func parsePrimaryExpression () Ast {
 			child: ast,
 		}
 	case "identifier":
-		ast := parseIdentifierOrFuncall (tok.sval)
+		ast := parseIdentifierOrFuncall ()
 		ast.debug ()
 		return &PrimaryExpression {
 			child: ast,
@@ -200,9 +200,12 @@ func parseSymbol () *Identifier {
 }
 
 
-func parseIdentifierOrFuncall (name string) Ast {
+func parseIdentifierOrFuncall () Ast {
 	tok := readToken ()
+	name := tok.sval
+	tok = lookahead (1)
 	if tok != nil && tok.typ == "punct" && tok.sval == "(" {
+		consumeToken ("(")
 		arg1 := parseExpression ()
 		consumeToken (",")
 		arg2 := parseExpression ()

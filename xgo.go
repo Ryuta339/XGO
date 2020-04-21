@@ -51,7 +51,7 @@ func main () {
 		debugPrint ("==== End Dump Tokens ====")
 	}
 	ast := parseExpression ()
-	showAst (ast, 0)
-	// debugAst (ast)
-	// generate (ast)
+	// showAst (ast, 0)
+	debugAst (ast)
+	generate (ast)
 }

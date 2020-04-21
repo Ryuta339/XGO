@@ -5,8 +5,6 @@ import (
 )
 
 
-
-
 /*** interface definitioins ***/
 
 type Ast interface {
@@ -83,6 +81,7 @@ type RuneConstant struct {
 // implements Constant
 func (rc *RuneConstant) emitConstant () {
 	emitCode ("\tpushq\t$%d", rc.rval)
+	frameHeight += 8
 }
 
 type IntegerConstant struct {
@@ -91,6 +90,7 @@ type IntegerConstant struct {
 // implements Constant
 func (ic *IntegerConstant) emitConstant () {
 	emitCode ("\tpushq\t$%d", ic.ival)
+	frameHeight += 8
 }
 
 
@@ -154,10 +154,10 @@ func (ae *ArithmeticExpression) emit () {
 	ae.right.emit ()
 	emitCode ("\tpopq\t%%rbx")
 	emitCode ("\tpopq\t%%rax")
-	frameHeight -= 8
+	frameHeight -= 16
 	ae.operator.emitOperator ()
 	emitCode ("\tpushq\t%%rax")
-	frameHeight += 4
+	frameHeight += 8
 }
 
 // implements Ast
@@ -297,6 +297,46 @@ type FunCall struct {
 
 // implements Ast
 func (fc *FunCall) emit () {
+	var regs = [] string {"rdi", "rsi"}
+	for i, _ := range fc.args {
+		emitCode ("\tpushq\t%%%s", regs[i])
+		frameHeight += 8
+	}
+
+	// stacking paddings
+	var fh int
+	fh = (frameHeight + 16) % 16   // for argument
+	if fh != 0 {
+		padding := 16 - fh
+		emitCode ("\tsubq\t$%d, %%rsp  # stack padding", padding)
+		frameHeight += padding
+	}
+
+	for _, arg := range fc.args {
+		arg.emit ()
+		// emitCode ("\tpushq\t%%rax")
+		// frameHeight += 8
+	}
+
+	for i, _ := range fc.args {
+		j := len (fc.args) - 1 - i
+		emitCode ("\tpopq\t%%%s", regs[j])
+		frameHeight -= 8
+	}
+	emitCode ("# frame height %d", frameHeight)
+	emitCode ("\tmovq\t$0, %%rax")
+	emitCode ("\tcallq\t_%s\t# frame height %d", fc.fname, frameHeight)
+
+	if fh != 0 {
+		padding := 16 - fh
+		emitCode ("\taddq\t$%d, %%rsp  # pop padding", padding)
+		frameHeight -= padding
+	}
+
+	for i, _ := range fc.args {
+		j := len (fc.args) - 1 - i
+		emitCode ("\tpopq\t%%%s", regs[j])
+	}
 }
 
 // implements Ast
@@ -325,6 +365,9 @@ type AstString struct {
 
 // implement Ast
 func (as *AstString) emit () {
+	emitCode ("\tleaq\t.%s(%%rip), %%rax", as.slabel)
+	emitCode ("\tpushq\t%%rax")
+	frameHeight += 8
 }
 
 // implement Ast

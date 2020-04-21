@@ -20,13 +20,13 @@ function test {
 }
 
 
-test 0 0 
-test 7 7
-test '2 + 5' 7
-test '10 - 4' 6
-test '4 * 3' 12
-test '1 * 2 + 3 * 4' 14
-test '1 + 2 * 3 + 4' 11
-test '6 - 3 - 2' 1
+test 'printf ("%d\\n", 0)' 0 
+test 'printf ("%d"\\n, 7)' 7
+test 'printf ("%d\\n", 2 + 5)' 7
+test 'printf ("%d\\n", 10 - 4)' 6
+test 'printf ("%d\\n", 4 * 3)' 12
+test 'printf ("%d\\n", 1 * 2 + 3 * 4)' 14
+test 'printf ("%d\\n", 1 + 2 * 3 + 4)' 11
+test 'printf ("%d\\n", 6 - 3 - 2)' 1
 
 echo "All tests passed"
