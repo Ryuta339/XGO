@@ -305,7 +305,7 @@ func (fc *FunCall) emit () {
 
 	// stacking paddings
 	var fh int
-	fh = (frameHeight + 16) % 16   // for argument
+	fh = (frameHeight + 8*len(fc.args)) % 16   // for argument
 	if fh != 0 {
 		padding := 16 - fh
 		emitCode ("\tsubq\t$%d, %%rsp  # stack padding", padding)

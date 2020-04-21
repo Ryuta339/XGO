@@ -206,16 +206,37 @@ func parseIdentifierOrFuncall () Ast {
 	tok = lookahead (1)
 	if tok != nil && tok.typ == "punct" && tok.sval == "(" {
 		consumeToken ("(")
-		arg1 := parseExpression ()
-		consumeToken (",")
-		arg2 := parseExpression ()
+		args := parseArgumentList ()
 		consumeToken (")")
 		return &FunCall {
 			fname : name,
-			args  : []Ast{arg1, arg2},
+			args  : args,
 		}
 	}
 
 	fmt.Println ("TBD")
 	return nil
+}
+
+func parseArgumentList () []Ast {
+	var r []Ast
+	for {
+		tok := lookahead (1)
+		if tok.sval == ")" {
+			return r
+		}
+		arg := parseExpression ()
+		r = append (r, arg)
+		tok = lookahead (1)
+		switch tok.sval {
+		case ")":
+			return r
+		case ",":
+			consumeToken (",")
+			continue
+		default:
+			fmt.Println ("Unexpected token %v in parseArgumentList.\n", tok.sval)
+			panic ("internal error")
+		}
+	}
 }
