@@ -106,8 +106,7 @@ func parseUnaryExpression () *UnaryExpression {
 			operand: ast,
 		}
 	default:
-		fmt.Printf ("Unexpected token %v in parseUnaryExpression.\n", tok.sval)
-		panic ("internal error")
+		putError ("Unexpected token %v in parseUnaryExpression.\n", tok.sval)
 	}
 	debugPrint ("nil")
 
@@ -134,8 +133,7 @@ func parsePrimaryExpression () Ast {
 			child: ast,
 		}
 	default:
-		fmt.Printf ("Unexpected token %v in parsePrimaryExpression.\n", tok.sval)
-		panic ("internal error")
+		putError ("Unexpected token %v in parsePrimaryExpression.\n", tok.sval)
 	}
 
 
@@ -146,8 +144,7 @@ func parsePrimaryExpression () Ast {
 func parseConstant () Ast {
 	tok := lookahead (1)
 	if tok == nil {
-		fmt.Printf ("tok is nil\n")
-		panic ("internal error")
+		putError ("tok is nil\n")
 	}
 	switch (tok.typ) {
 	case "int":
@@ -176,9 +173,8 @@ func parseConstant () Ast {
 		stringList = append (stringList, ast)
 		return ast
 	default:
-		fmt.Printf ("unknown token %v in parseConstant\n", tok)
+		putError ("unknown token %v in parseConstant\n", tok)
 		debugToken (tok)
-		panic ("internal error")
 	}
 	return nil
 }
@@ -186,8 +182,8 @@ func parseConstant () Ast {
 func parseSymbol () *Identifier {
 	tok := lookahead (1)
 	if tok == nil {
-		fmt.Printf ("tok is nil\n")
-		panic ("internal error")
+		putError ("tok is nil\n")
+		debugToken (tok)
 	}
 	if tok.typ == "symbol" {
 		nextToken ()
@@ -199,9 +195,10 @@ func parseSymbol () *Identifier {
 			symbol: sym,
 		}
 	} else {
-		fmt.Printf ("Unexpected token %v in parseSymbol.\n", tok.sval)
-		panic ("internal error")
+		putError ("Unexpected token %v in parseSymbol.\n", tok.sval)
+		debugToken (tok)
 	}
+	return nil
 }
 
 
@@ -241,8 +238,8 @@ func parseArgumentList () []Ast {
 			consumeToken (",")
 			continue
 		default:
-			fmt.Printf ("Unexpected token %s, %s in parseArgumentList.\n", tok.typ, tok.sval)
-			panic ("internal error")
+			putError ("Unexpected token %s in parseArgumentList.\n", tok.sval)
+			debugToken (tok)
 		}
 	}
 }

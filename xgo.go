@@ -8,6 +8,12 @@ import (
 
 
 var debugMode = false
+var errorFlag = false
+
+func putError (errorMsg string, v ...interface{}) {
+	fmt.Fprintf (os.Stderr, errorMsg, v)
+	errorFlag = true
+}
 
 
 func readFile (filename string) string {
@@ -52,6 +58,9 @@ func main () {
 	}
 	ast := parseExpression ()
 	// showAst (ast, 0)
+	if errorFlag {
+		panic ("internal error")
+	}
 	debugAst (ast)
 	generate (ast)
 }
