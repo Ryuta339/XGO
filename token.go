@@ -21,16 +21,10 @@ var source string
 var sourceIndex int
 
 
-
-
-func readToken () *Token {
-	if tokenIndex <= len (tokens)-1 {
-		r := tokens[tokenIndex]
-		fmt.Printf ("# read token %v.\n", r)
+func nextToken () {
+	if tokenIndex <= len (tokens) - 1 {
 		tokenIndex ++
-		return r
 	}
-	return nil
 }
 
 func lookahead (num int) *Token {
@@ -48,17 +42,10 @@ func consumeToken (expected string) {
 		panic ("internal error")
 	}
 	if (expected == tok.sval) {
-		readToken ()
+		nextToken ()
 	} else {
 		fmt.Printf ("Unexpected token %v.\n", tok.sval)
 		panic ("internal error")
-	}
-}
-
-func unreadToken () {
-	if tokenIndex >= 0 {
-		tokenIndex --
-		fmt.Printf ("# unread token %v\n", tokens[tokenIndex])
 	}
 }
 
@@ -74,7 +61,6 @@ func debugTokens (tokens []*Token) {
 		debugToken (tok)
 	}
 }
-
 
 func getc () (byte, error) {
 	if sourceIndex >= len (source) {
@@ -255,9 +241,6 @@ func tokenize (s string) []*Token {
 		r = append (r, tok)
 	}
 }
-
-
-
 
 func renderTokens (tokens []*Token) {
 	debugPrint ("==== Start Dump Tokens ====")

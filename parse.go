@@ -22,7 +22,7 @@ func parseAssignmentExpression () Ast {
 func parseAdditiveExpression () Ast {
 	var ast Ast = parseMultiplicativeExpression ()
 	for {
-		tok := readToken ()
+		tok := lookahead (1)
 		if tok == nil {
 			return ast
 		}
@@ -31,6 +31,7 @@ func parseAdditiveExpression () Ast {
 		}
 		switch tok.sval {
 		case "+":
+			consumeToken ("+")
 			right := parseMultiplicativeExpression ()
 			right.debug ()
 			ast = &ArithmeticExpression {
@@ -39,6 +40,7 @@ func parseAdditiveExpression () Ast {
 				right:    right,
 			}
 		case "-":
+			consumeToken ("-")
 			right := parseMultiplicativeExpression ()
 			right.debug ()
 			ast = &ArithmeticExpression {
@@ -47,7 +49,6 @@ func parseAdditiveExpression () Ast {
 				right:    right,
 			}
 		default:
-			unreadToken ()
 			return ast
 		}
 	}
@@ -57,7 +58,7 @@ func parseAdditiveExpression () Ast {
 func parseMultiplicativeExpression () Ast {
 	var ast Ast = parseUnaryExpression ()
 	for {
-		tok := readToken ()
+		tok := lookahead (1)
 		if tok == nil {
 			return ast
 		}
@@ -66,6 +67,7 @@ func parseMultiplicativeExpression () Ast {
 		}
 		switch tok.sval {
 		case "*":
+			consumeToken ("*")
 			right := parseUnaryExpression ()
 			right.debug ()
 			ast = &ArithmeticExpression {
@@ -74,6 +76,7 @@ func parseMultiplicativeExpression () Ast {
 				right:    right,
 			}
 		case "/" :
+			consumeToken ("/")
 			right := parseUnaryExpression ()
 			right.debug ()
 			ast = &ArithmeticExpression {
@@ -82,10 +85,8 @@ func parseMultiplicativeExpression () Ast {
 				right:    right,
 			}
 		case "+", "-":
-			unreadToken ()
 			return ast
 		default:
-			unreadToken ()
 			return ast
 		}
 	}
@@ -143,7 +144,7 @@ func parsePrimaryExpression () Ast {
 }
 
 func parseConstant () Ast {
-	tok := readToken ()
+	tok := lookahead (1)
 	if tok == nil {
 		fmt.Printf ("tok is nil\n")
 		panic ("internal error")
@@ -151,6 +152,7 @@ func parseConstant () Ast {
 	switch (tok.typ) {
 	case "int":
 		ival, _ := strconv.Atoi (tok.sval)
+		nextToken ()
 		return &AstConstant {
 			constant: &IntegerConstant {
 				ival: ival,
@@ -158,12 +160,14 @@ func parseConstant () Ast {
 		}
 	case "rune":
 		rarr := []rune (tok.sval)
+		nextToken ()
 		return &AstConstant {
 			constant: &RuneConstant {
 				rval: rarr[0],
 			},
 		}
 	case "string":
+		nextToken ()
 		ast :=  &AstString {
 			sval: tok.sval,
 			slabel: fmt.Sprintf ("L%d", stringIndex),
@@ -180,12 +184,13 @@ func parseConstant () Ast {
 }
 
 func parseSymbol () *Identifier {
-	tok := readToken ()
+	tok := lookahead (1)
 	if tok == nil {
 		fmt.Printf ("tok is nil\n")
 		panic ("internal error")
 	}
 	if tok.typ == "symbol" {
+		nextToken ()
 		sym := findSymbol (tok.sval)
 		if sym == nil {
 			sym = makeSymbol (tok.sval, "int")
@@ -201,8 +206,9 @@ func parseSymbol () *Identifier {
 
 
 func parseIdentifierOrFuncall () Ast {
-	tok := readToken ()
+	tok := lookahead (1)
 	name := tok.sval
+	nextToken ()
 	tok = lookahead (1)
 	if tok != nil && tok.typ == "punct" && tok.sval == "(" {
 		consumeToken ("(")
