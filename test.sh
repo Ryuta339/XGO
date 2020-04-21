@@ -21,7 +21,7 @@ function test {
 
 
 test 'printf ("%d\\n", 0)' 0 
-test 'printf ("%d"\\n, 7)' 7
+test 'printf ("%d\\n", 7)' 7
 test 'printf ("%d\\n", 2 + 5)' 7
 test 'printf ("%d\\n", 10 - 4)' 6
 test 'printf ("%d\\n", 4 * 3)' 12

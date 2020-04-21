@@ -199,7 +199,7 @@ func parseSymbol () *Identifier {
 			symbol: sym,
 		}
 	} else {
-		fmt.Println ("Unexpected token %v in parseSymbol.\n", tok.sval)
+		fmt.Printf ("Unexpected token %v in parseSymbol.\n", tok.sval)
 		panic ("internal error")
 	}
 }
@@ -241,7 +241,7 @@ func parseArgumentList () []Ast {
 			consumeToken (",")
 			continue
 		default:
-			fmt.Println ("Unexpected token %v in parseArgumentList.\n", tok.sval)
+			fmt.Printf ("Unexpected token %s, %s in parseArgumentList.\n", tok.typ, tok.sval)
 			panic ("internal error")
 		}
 	}
