@@ -56,7 +56,7 @@ func main () {
 		debugTokens (tokens)
 		debugPrint ("==== End Dump Tokens ====")
 	}
-	ast := parseExpression ()
+	ast := parseStatement ()
 	// showAst (ast, 0)
 	if errorFlag {
 		panic ("internal error")

@@ -5,7 +5,7 @@ function test {
 	expected="$2"
 	expr="$1"
 
-	echo -n "$expr" | go run *.go > tmp.s
+	echo "$expr" | go run *.go > tmp.s
 	# gcc -o tmp.out driver.c tmp.s 
 	gcc -o tmp.out tmp.s
 	result="`./tmp.out`"
@@ -28,5 +28,7 @@ test 'printf ("%d\\n", 4 * 3)' 12
 test 'printf ("%d\\n", 1 * 2 + 3 * 4)' 14
 test 'printf ("%d\\n", 1 + 2 * 3 + 4)' 11
 test 'printf ("%d\\n", 6 - 3 - 2)' 1
+test "{printf (\"hello\")
+printf (\"world\")}" "helloworld"
 
 echo "All tests passed"

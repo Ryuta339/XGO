@@ -96,6 +96,66 @@ func (ic *IntegerConstant) emitConstant () {
 
 /* ================================================================ */
 
+/* ================================
+ * Compound Statement
+ *     implements Ast
+ * ================================ */
+type CompoundStatement struct {
+	statements []Ast
+}
+
+// implements Ast
+func (cs *CompoundStatement) emit () {
+	for _, statement := range cs.statements {
+		statement.emit ()
+	}
+}
+
+// implements Ast
+func (cs *CompoundStatement) debug () {
+	debugPrint ("compound_statement")
+	for _, statement := range cs.statements {
+		statement.debug ()
+	}
+}
+
+// implements Ast
+func (cs *CompoundStatement) show (depth int) {
+	printSpace (depth)
+	fmt.Printf ("CompoundStatement\n")
+	for _, ast := range cs.statements {
+		ast.show (depth+1)
+	}
+}
+
+
+
+/* ================================
+ * Statement
+ *     implements Ast
+ * ================================ */
+type Statement struct {
+	ast Ast
+}
+
+// implements Ast
+func (s *Statement) emit () {
+	s.ast.emit ()
+}
+
+// implements Ast 
+func (s *Statement) debug () {
+	debugPrint ("statement")
+	s.ast.debug ()
+}
+
+// implements Ast
+func (s *Statement) show (depth int) {
+	printSpace (depth)
+	fmt.Printf ("Statement\n")
+	s.ast.show (depth+1)
+}
+
 
 
 

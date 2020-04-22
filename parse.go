@@ -9,6 +9,42 @@ var stringIndex = 0
 var stringList [] *AstString
 
 
+func parseCompoundStatement () Ast {
+	var statements []Ast
+	consumeToken ("{")
+	for {
+		tok := lookahead (1)
+		switch tok.sval {
+		case "}":
+			consumeToken ("}")
+			return &CompoundStatement {
+				statements: statements,
+			}
+		default:
+			var ast Ast = parseStatement ()
+			statements = append (statements, ast)
+		}
+	}
+	return parseStatement ()
+}
+
+func parseStatement () Ast {
+	var ast Ast
+
+	tok := lookahead (1)
+	switch tok.sval {
+	case "{":
+		ast = parseCompoundStatement ()
+	default:
+		ast = parseExpression ()
+	}
+
+	return &Statement {
+		ast: ast,
+	}
+}
+
+
 func parseExpression () Ast {
 	ast := parseAdditiveExpression ()
 	return ast
