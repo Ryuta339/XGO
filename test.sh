@@ -1,5 +1,8 @@
 #!/bin/bash
 
+s_file="./out/tmp.s"
+prog_name="xgo"
+go build -o ${prog_name} *.go
 
 function test {
 	expected="$2"
@@ -19,16 +22,13 @@ function test {
 	fi
 }
 
+function run_test_go {
+	./${prog_name} < ./test/test.go > $s_file
+	gcc -o ./out/tmp.out $s_file
+	./out/tmp.out > ./out/actual.txt
+	diff ./out/actual.txt ./test/expected.txt
+}
 
-test 'printf ("%d\\n", 0)' 0 
-test 'printf ("%d\\n", 7)' 7
-test 'printf ("%d\\n", 2 + 5)' 7
-test 'printf ("%d\\n", 10 - 4)' 6
-test 'printf ("%d\\n", 4 * 3)' 12
-test 'printf ("%d\\n", 1 * 2 + 3 * 4)' 14
-test 'printf ("%d\\n", 1 + 2 * 3 + 4)' 11
-test 'printf ("%d\\n", 6 - 3 - 2)' 1
-test "{printf (\"hello\")
-printf (\"world\")}" "helloworld"
+run_test_go
 
 echo "All tests passed"

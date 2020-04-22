@@ -365,7 +365,9 @@ func (fc *FunCall) emit () {
 
 	// stacking paddings
 	var fh int
-	fh = (frameHeight + 8*len(fc.args)) % 16   // for argument
+	emitCode ("# frame height %d before arguments", frameHeight)
+	// fh = (frameHeight + 8*len(fc.args)) % 16   // for argument
+	fh = frameHeight % 16
 	if fh != 0 {
 		padding := 16 - fh
 		emitCode ("\tsubq\t$%d, %%rsp  # stack padding", padding)
@@ -374,8 +376,6 @@ func (fc *FunCall) emit () {
 
 	for _, arg := range fc.args {
 		arg.emit ()
-		// emitCode ("\tpushq\t%%rax")
-		// frameHeight += 8
 	}
 
 	for i, _ := range fc.args {
@@ -383,7 +383,7 @@ func (fc *FunCall) emit () {
 		emitCode ("\tpopq\t%%%s", regs[j])
 		frameHeight -= 8
 	}
-	emitCode ("# frame height %d", frameHeight)
+	emitCode ("# frame height %d after arguments", frameHeight)
 	emitCode ("\tmovq\t$0, %%rax")
 	emitCode ("\tcallq\t_%s\t# frame height %d", fc.fname, frameHeight)
 

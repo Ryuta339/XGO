@@ -8,6 +8,10 @@ import (
 var stringIndex = 0
 var stringList [] *AstString
 
+func parse () Ast {
+	return parseStatement ()
+}
+
 
 func parseCompoundStatement () Ast {
 	var statements []Ast
