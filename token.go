@@ -166,7 +166,19 @@ func readString () string {
 		}
 		if c == '\\' {
 			c, err = getc ()
-			bytes = append (bytes, c)
+			if err != nil {
+				panic ("invalid string literal")
+			}
+			switch c {
+			case 'n':
+				bytes = append (bytes, '\n')
+			case 'r':
+				bytes = append (bytes, '\r')
+			case 't':
+				bytes = append (bytes, '\t')
+			default:
+				bytes = append (bytes, c)
+			}
 			continue
 		} else if c == '"' {
 			return string (bytes)
