@@ -18,27 +18,22 @@ func emitDataSection () {
 	}
 }
 
-func emitFuncMainPrologue () {
+func emitFuncPrologue (fname string) {
 	// これ後で修正したい
 	emitCode (".text")
-	emitCode ("\t.global _main")
-	emitCode ("_main:");
+	emitCode ("\t.global _%s", fname)
+	emitCode ("_%s:", fname);
 	emitCode ("\tpushq\t%%rbp")
 	emitCode ("\tmovq\t%%rsp, %%rbp")
 	frameHeight += 8
 }
 
-func emitFuncMainEpilogue () {
+func emitFuncEpilogue () {
 	emitCode ("\tleave")
 	emitCode ("\tret")
 }
 
 func generate (ast Ast) {
 	emitDataSection ()
-	emitFuncMainPrologue ()
-
 	ast.emit ()
-
-	emitCode ("\tmovl\t$0, %%eax")  // return 0
-	emitFuncMainEpilogue ()
 }

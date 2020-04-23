@@ -19,6 +19,7 @@ type ArithmeticOperator interface {
 
 type Constant interface {
 	emitConstant ()
+	toStringValue () string
 }
 
 
@@ -83,6 +84,10 @@ func (rc *RuneConstant) emitConstant () {
 	emitCode ("\tpushq\t$%d", rc.rval)
 	frameHeight += 8
 }
+// implements Costant
+func (rc *RuneConstant) toStringValue () string {
+	return string (rc.rval)
+}
 
 type IntegerConstant struct {
 	ival int
@@ -92,9 +97,44 @@ func (ic *IntegerConstant) emitConstant () {
 	emitCode ("\tpushq\t$%d", ic.ival)
 	frameHeight += 8
 }
+// implements Constant
+func (ic *IntegerConstant) toStringValue () string {
+	return string (ic.ival)
+}
+
 
 
 /* ================================================================ */
+
+/* ================================
+ * Function Definition
+ *     implements Ast
+ * ================================ */
+type FunctionDefinition struct {
+	fname string
+	ast   Ast
+}
+
+// implements Ast
+func (fd *FunctionDefinition) emit () {
+	emitFuncPrologue (fd.fname)
+	fd.ast.emit ()
+	emitCode ("\tmovl\t$0, %%eax") // return 0
+	emitFuncEpilogue ()
+}
+
+// implements Ast
+func (fd *FunctionDefinition) show (depth int) {
+	printSpace (depth)
+	fmt.Printf ("FunctionDefinition\n")
+	fd.ast.show (depth+1)
+}
+
+// implements Ast
+func (fd *FunctionDefinition) debug () {
+	debugPrint (fmt.Sprintf ("funcdef: %s", fd.fname))
+	fd.ast.debug ()
+}
 
 /* ================================
  * Compound Statement
@@ -313,7 +353,7 @@ func (ac *AstConstant) debug () {
 // implements Ast
 func (ac *AstConstant) show (depth int) {
 	printSpace (depth)
-	fmt.Printf ("AstConstant\n")
+	fmt.Printf ("AstConstant (%s)\n", ac.constant.toStringValue ())
 }
 
 
@@ -439,3 +479,4 @@ func (as *AstString) show (depth int) {
 	printSpace (depth)
 	fmt.Printf ("AstString (%s)\n", as.sval)
 }
+

@@ -61,10 +61,13 @@ func main () {
 	if errorFlag {
 		panic ("internal error")
 	}
+	/*
 	if debugMode {
 		debugPrint ("==== Start Dump Ast ====")
 		debugAst (ast)
 		debugPrint ("==== End Dump Ast ====")
 	}
+	*/
 	generate (ast)
+	
 }

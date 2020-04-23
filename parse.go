@@ -9,7 +9,42 @@ var stringIndex = 0
 var stringList [] *AstString
 
 func parse () Ast {
-	return parseStatement ()
+	var ast Ast
+	tok := lookahead (1)
+	if tok == nil {
+		return nil
+	}
+	switch tok.sval {
+	case "func":
+		ast = parseFunctionDefinition ()
+	}
+
+	return ast
+}
+
+func parseFunctionDefinition () Ast {
+	tok := lookahead (1)
+	if tok.typ != "reserved" {
+		putError ("func expected, but got %v", tok.typ)
+	}
+	consumeToken ("func")
+	tok = lookahead (1)
+	if tok.typ != "identifier" {
+		putError ("Identifier expected, but got %v", tok.typ)
+	}
+	nextToken ()
+	consumeToken ("(")
+	consumeToken (")")
+	// expect Type
+	tok2 := lookahead (1)
+	if tok2.sval != "{" {
+		putError ("{ expected, but got %v", tok.sval)
+	}
+	ast := parseCompoundStatement ()
+	return &FunctionDefinition {
+		fname: tok.sval,
+		ast  : ast,
+	}
 }
 
 
@@ -283,3 +318,5 @@ func parseArgumentList () []Ast {
 		}
 	}
 }
+
+

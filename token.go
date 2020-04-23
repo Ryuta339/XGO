@@ -157,6 +157,10 @@ func readName (b byte) string {
 	}
 }
 
+func isReserved (word string) bool {
+	return word == "func"
+}
+
 func readString () string {
 	var bytes = []byte {}
 	for {
@@ -246,8 +250,13 @@ func tokenize (s string) []*Token {
 			tok = &Token {typ: "assignment", sval: fmt.Sprintf ("%c", c)}
 		default:
 			sval := readName (c)
-			tok = &Token {typ: "identifier", sval: sval}
-			makeSymbol (sval, "int")
+			if isReserved (sval) {
+				tok = &Token {typ: "reserved", sval: sval}
+				makeSymbol (sval, "func")
+			} else {
+				tok = &Token {typ: "identifier", sval: sval}
+				makeSymbol (sval, "int")
+			}
 		}
 		debugToken (tok)
 		r = append (r, tok)
