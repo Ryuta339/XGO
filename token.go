@@ -88,16 +88,12 @@ func isPunctuation (b byte) bool {
 
 func isNumber (b byte) bool {
 	ret := '0'<=b && b<='9'
-	if ret {
-		debugPrint (fmt.Sprintf ("is_numeric %c", b))
-	}
 	return ret
 }
 
 func readNumber (b byte) string {
 	var chars = []byte{b}
 	for {
-		debugPrint ("read number");
 		c, err := getc ()
 		if err != nil {
 			return string (chars)
@@ -212,7 +208,6 @@ func readChar () string {
 	if c == '\\' {
 		c, err = getc ()
 	}
-	debugPrint ("gotc:" + string(c))
 	expect ('\'')
 	return string ([]byte{c})
 }
@@ -258,7 +253,6 @@ func tokenize (s string) []*Token {
 				makeSymbol (sval, "int")
 			}
 		}
-		debugToken (tok)
 		r = append (r, tok)
 	}
 }

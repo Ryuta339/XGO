@@ -108,7 +108,6 @@ func parseAdditiveExpression () Ast {
 		case "+":
 			consumeToken ("+")
 			right := parseMultiplicativeExpression ()
-			right.debug ()
 			ast = &ArithmeticExpression {
 				operator: &AdditiveOperator {},
 				left:     ast,
@@ -117,7 +116,6 @@ func parseAdditiveExpression () Ast {
 		case "-":
 			consumeToken ("-")
 			right := parseMultiplicativeExpression ()
-			right.debug ()
 			ast = &ArithmeticExpression {
 				operator: &SubtractionOperator {},
 				left:     ast,
@@ -144,7 +142,6 @@ func parseMultiplicativeExpression () Ast {
 		case "*":
 			consumeToken ("*")
 			right := parseUnaryExpression ()
-			right.debug ()
 			ast = &ArithmeticExpression {
 				operator: &MultiplicativeOperator {},
 				left:     ast,
@@ -153,7 +150,6 @@ func parseMultiplicativeExpression () Ast {
 		case "/" :
 			consumeToken ("/")
 			right := parseUnaryExpression ()
-			right.debug ()
 			ast = &ArithmeticExpression {
 				operator: &DivisionOperator {},
 				left:     ast,
@@ -176,14 +172,12 @@ func parseUnaryExpression () *UnaryExpression {
 	switch tok.typ {
 	case "int", "rune", "string", "identifier":
 		ast = parsePrimaryExpression ()
-		ast.debug ()
 		return &UnaryExpression {
 			operand: ast,
 		}
 	default:
 		putError ("Unexpected token %v in parseUnaryExpression.\n", tok.sval)
 	}
-	debugPrint ("nil")
 
 	return nil
 }
@@ -197,13 +191,11 @@ func parsePrimaryExpression () Ast {
 	switch tok.typ {
 	case "int", "rune", "string":
 		ast := parseConstant ()
-		ast.debug ()
 		return &PrimaryExpression {
 			child: ast,
 		}
 	case "identifier":
 		ast := parseIdentifierOrFuncall ()
-		ast.debug ()
 		return &PrimaryExpression {
 			child: ast,
 		}

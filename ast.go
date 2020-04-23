@@ -153,7 +153,7 @@ func (cs *CompoundStatement) emit () {
 
 // implements Ast
 func (cs *CompoundStatement) debug () {
-	debugPrint ("compound_statement")
+	debugPrint ("ast.compound_statement")
 	for _, statement := range cs.statements {
 		statement.debug ()
 	}
@@ -185,7 +185,7 @@ func (s *Statement) emit () {
 
 // implements Ast 
 func (s *Statement) debug () {
-	debugPrint ("statement")
+	debugPrint ("ast.statement")
 	s.ast.debug ()
 }
 
@@ -221,7 +221,7 @@ func (ae *AssignmentExpression) emit () {
 
 // implements Ast
 func (ae *AssignmentExpression) debug () {
-	debugPrint ("assignment_expression")
+	debugPrint ("ast.assignment_expression")
 	ae.left.debug ()
 	ae.right.debug ()
 }
@@ -322,6 +322,7 @@ func (pe *PrimaryExpression) emit () {
 // implements Ast
 func (pe *PrimaryExpression) debug () {
 	debugPrint ("ast.primary_expression")
+	pe.child.debug ()
 }
 
 // implements Ast
@@ -441,6 +442,10 @@ func (fc *FunCall) emit () {
 
 // implements Ast
 func (fc *FunCall) debug () {
+	debugPrint ("ast.funcall")
+	for _, v:= range fc.args {
+		v.debug ()
+	}
 }
 
 // implements Ast
@@ -472,6 +477,7 @@ func (as *AstString) emit () {
 
 // implement Ast
 func (as *AstString) debug () {
+	debugPrint ("ast.string")
 }
 
 // implements ast
