@@ -12,6 +12,7 @@ var errorFlag = false
 
 func putError (errorMsg string, v ...interface{}) {
 	fmt.Fprintf (os.Stderr, errorMsg, v)
+	fmt.Fprintln (os.Stderr, "")
 	errorFlag = true
 }
 
@@ -37,11 +38,16 @@ func debugPrintWithVariable (name string, v interface{}) {
 func main () {
 	debugMode = true
 
+	astMode := false
+
 	var sourceFile string
 	if len (os.Args) > 1 {
 		sourceFile = os.Args[1] + ".go"
 	} else {
 		sourceFile = "/dev/stdin"
+	}
+	if len(os.Args)>2  && os.Args[2]=="-a" {
+		astMode = true
 	}
 
 	s := readFile (sourceFile)
@@ -57,7 +63,6 @@ func main () {
 		debugPrint ("==== End Dump Tokens ====")
 	}
 	ast := parse ()
-	// showAst (ast, 0)
 	if errorFlag {
 		panic ("internal error")
 	}
@@ -66,5 +71,9 @@ func main () {
 		debugAst (ast)
 		debugPrint ("==== End Dump Ast ====")
 	}
-	generate (ast)
+	if astMode {
+		showAst (ast, 0)
+	} else {
+		generate (ast)
+	}
 }

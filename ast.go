@@ -107,6 +107,41 @@ func (ic *IntegerConstant) toStringValue () string {
 /* ================================================================ */
 
 /* ================================
+ * TranslationUnit
+ *     implements Ast
+ * ================================ */
+type TranslationUnit struct {
+	packname  string
+//	packages  []string
+	childs    []Ast
+}
+
+// implements Ast
+func (tu *TranslationUnit) emit () {
+	for _, child := range tu.childs {
+		child.emit ()
+	}
+}
+
+// implements Ast
+func (tu *TranslationUnit) show (depth int) {
+	printSpace (depth)
+	fmt.Printf ("TranslationUnit (%s)\n", tu.packname)
+	for _, child := range tu.childs {
+		child.show (depth+1)
+	}
+}
+
+// implements Ast
+func (tu *TranslationUnit) debug () {
+	debugPrint ("ast.translation_unit")
+	for _, child := range tu.childs {
+		child.debug ()
+	}
+}
+
+
+/* ================================
  * Function Definition
  *     implements Ast
  * ================================ */

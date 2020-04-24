@@ -154,7 +154,7 @@ func readName (b byte) string {
 }
 
 func isReserved (word string) bool {
-	return word == "func"
+	return word == "func" || word == "package"
 }
 
 func readString () string {
@@ -247,7 +247,6 @@ func tokenize (s string) []*Token {
 			sval := readName (c)
 			if isReserved (sval) {
 				tok = &Token {typ: "reserved", sval: sval}
-				makeSymbol (sval, "func")
 			} else {
 				tok = &Token {typ: "identifier", sval: sval}
 				makeSymbol (sval, "int")

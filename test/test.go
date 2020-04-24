@@ -1,3 +1,5 @@
+package "main"
+
 func main () {
 	printf ("%d\n", 2 + 5)
 	printf ("%d\n", 10 - 4)

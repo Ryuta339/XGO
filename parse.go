@@ -9,18 +9,60 @@ var stringIndex = 0
 var stringList [] *AstString
 
 func parse () Ast {
-	var ast Ast
+	return parseTranslationUnit ()
+}
+
+func parseTranslationUnit () Ast {
 	tok := lookahead (1)
 	if tok == nil {
 		return nil
 	}
-	switch tok.sval {
-	case "func":
-		ast = parseFunctionDefinition ()
+	packname := parsePackageDeclaration ()
+	var childs []Ast
+
+	for {
+		tok = lookahead (1)
+		if tok == nil {
+			return &TranslationUnit {
+				packname: packname,
+				childs  : childs,
+			}
+		}
+		
+		switch tok.sval {
+		case "func":
+			ast := parseFunctionDefinition ()
+			childs = append (childs, ast)
+		default:
+			putError ("func expected, but got %v.", tok.sval)
+		}
 	}
 
-	return ast
+	return &TranslationUnit {
+		packname: packname,
+		childs  : childs,
+	}
 }
+
+func parsePackageDeclaration () string {
+	tok := lookahead (1)
+	if tok == nil {
+		putError ("No package declaration.")
+	}
+	if tok.typ != "reserved" || tok.sval != "package" {
+		putError ("No package declaration.")
+	}
+	consumeToken ("package")
+
+	tok = lookahead (1)
+	if tok.typ != "string" {
+		putError ("%s is not allowed to be package name.", tok.sval)
+	}
+	packname := tok.sval
+	nextToken ()
+	return packname
+}
+
 
 func parseFunctionDefinition () Ast {
 	tok := lookahead (1)
