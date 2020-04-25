@@ -9,6 +9,8 @@ type Debuggable interface {
 	debug()
 }
 
+
+
 var debugMode = false
 
 func debugPrint(s string) {
@@ -30,4 +32,8 @@ func debugToken(tok *Token) {
 		return
 	}
 	tok.debug()
+}
+
+func debugAst(ast Ast) {
+	ast.debug()
 }

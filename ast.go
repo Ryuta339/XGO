@@ -10,7 +10,7 @@ import (
 type Ast interface {
 	emit()
 	show(depth int)
-	debug()
+	Debuggable
 }
 
 type ArithmeticOperator interface {
@@ -31,9 +31,6 @@ func showAst(ast Ast, depth int) {
 	ast.show(depth)
 }
 
-func debugAst(ast Ast) {
-	ast.debug()
-}
 
 /* ===============================
  * Arithmetic operators implementation
@@ -109,7 +106,7 @@ func (ic *IntegerConstant) toStringValue() string {
 
 /* ================================
  * TranslationUnit
- *     implements Ast
+ *     implements Ast and Debuggale
  * ================================ */
 type TranslationUnit struct {
 	packname string
