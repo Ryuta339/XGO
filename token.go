@@ -2,82 +2,79 @@ package main
 
 import (
 	"fmt"
-//	"io/ioutil"
-	"strings"
+	//	"io/ioutil"
 	"errors"
 	"os"
+	"strings"
 )
-
 
 type Token struct {
 	typ  string
 	sval string
 }
 
-
-var tokens [] *Token
+var tokens []*Token
 var tokenIndex int
 var source string
 var sourceIndex int
 
-
-func nextToken () {
-	if tokenIndex <= len (tokens) - 1 {
-		tokenIndex ++
+func nextToken() {
+	if tokenIndex <= len(tokens)-1 {
+		tokenIndex++
 	}
 }
 
-func lookahead (num int) *Token {
+func lookahead(num int) *Token {
 	idx := tokenIndex + num - 1
-	if idx <= len (tokens)-1 {
+	if idx <= len(tokens)-1 {
 		return tokens[idx]
 	}
 	return nil
 }
 
-func consumeToken (expected string) {
-	tok := lookahead (1)
+func consumeToken(expected string) {
+	tok := lookahead(1)
 	if tok == nil {
-		fmt.Printf ("Unexpected termination.\n")
-		panic ("internal error")
+		fmt.Printf("Unexpected termination.\n")
+		panic("internal error")
 	}
-	if (expected == tok.sval) {
-		nextToken ()
+	if expected == tok.sval {
+		nextToken()
 	} else {
-		fmt.Printf ("Unexpected token %v.\n", tok.sval)
-		panic ("internal error")
+		fmt.Printf("Unexpected token %v.\n", tok.sval)
+		panic("internal error")
 	}
 }
 
-func debugToken (tok *Token) {
+func debugToken(tok *Token) {
 	if tok == nil {
-		fmt.Fprintf (os.Stderr, "nil\n")
+		fmt.Fprintf(os.Stderr, "nil\n")
 	}
-	debugPrint (fmt.Sprintf ("tok:type=%s, sval=%s", tok.typ, tok.sval))
+	debugPrint(fmt.Sprintf("tok:type=%s, sval=%s", tok.typ, tok.sval))
 }
 
-func debugTokens (tokens []*Token) {
+func debugTokens(tokens []*Token) {
 	for _, tok := range tokens {
-		debugToken (tok)
+		debugToken(tok)
 	}
 }
 
-func getc () (byte, error) {
-	if sourceIndex >= len (source) {
-		return 0, errors.New ("EOF")
+func getc() (byte, error) {
+	if sourceIndex >= len(source) {
+		return 0, errors.New("EOF")
 	}
 	r := source[sourceIndex]
-	sourceIndex ++
+	sourceIndex++
 	return r, nil
 }
 
-func ungetc () {
+func ungetc() {
 	if sourceIndex > 0 {
-		sourceIndex --
+		sourceIndex--
 	}
 }
 
-func isPunctuation (b byte) bool {
+func isPunctuation(b byte) bool {
 	switch b {
 	case '+', '-', '(', ')', '=', '{', '}', '*', '[', ']', ',', ':', '.', '!', '<', '>', '&', '|', '%', '/':
 		return true
@@ -86,139 +83,137 @@ func isPunctuation (b byte) bool {
 	}
 }
 
-func isNumber (b byte) bool {
-	ret := '0'<=b && b<='9'
+func isNumber(b byte) bool {
+	ret := '0' <= b && b <= '9'
 	return ret
 }
 
-func readNumber (b byte) string {
+func readNumber(b byte) string {
 	var chars = []byte{b}
 	for {
-		c, err := getc ()
+		c, err := getc()
 		if err != nil {
-			return string (chars)
+			return string(chars)
 		}
-		if isNumber (c) {
-			chars = append (chars, c)
+		if isNumber(c) {
+			chars = append(chars, c)
 			continue
 		} else {
-			ungetc ()
-			return string (chars)
+			ungetc()
+			return string(chars)
 		}
 	}
 }
 
-func isSpace (b byte) bool {
+func isSpace(b byte) bool {
 	return b == ' ' || b == '\t' || b == '\n' || b == '\r'
 }
 
-func skipSpace () {
+func skipSpace() {
 	for {
-		c, err := getc ()
+		c, err := getc()
 		if err != nil {
 			return
 		}
-		if isSpace (c) {
+		if isSpace(c) {
 			continue
 		} else {
-			ungetc ()
+			ungetc()
 			return
 		}
 	}
 }
 
-
-func isAlphabet (b byte) bool {
-	return ('A'<=b && b<='Z') || ('a'<=b && b<='z')
+func isAlphabet(b byte) bool {
+	return ('A' <= b && b <= 'Z') || ('a' <= b && b <= 'z')
 }
 
-func isName (b byte) bool {
-	return b == '_' || isAlphabet (b)
+func isName(b byte) bool {
+	return b == '_' || isAlphabet(b)
 }
 
-func readName (b byte) string {
-	var bytes = []byte {b}
+func readName(b byte) string {
+	var bytes = []byte{b}
 	for {
-		c, err := getc ()
+		c, err := getc()
 		if err != nil {
-			return string (bytes)
+			return string(bytes)
 		}
-		if isName (c) {
-			bytes = append (bytes, c)
+		if isName(c) {
+			bytes = append(bytes, c)
 			continue
 		} else {
-			ungetc ()
-			return string (bytes)
+			ungetc()
+			return string(bytes)
 		}
 	}
 }
 
-func isReserved (word string) bool {
+func isReserved(word string) bool {
 	return word == "func" || word == "package"
 }
 
-func readString () string {
-	var bytes = []byte {}
+func readString() string {
+	var bytes = []byte{}
 	for {
-		c, err := getc ()
+		c, err := getc()
 		if err != nil {
-			panic ("invalid string literal")
+			panic("invalid string literal")
 		}
 		if c == '\\' {
-			c, err = getc ()
+			c, err = getc()
 			if err != nil {
-				panic ("invalid string literal")
+				panic("invalid string literal")
 			}
 			switch c {
 			case 'n':
-				bytes = append (bytes, '\n')
+				bytes = append(bytes, '\n')
 			case 'r':
-				bytes = append (bytes, '\r')
+				bytes = append(bytes, '\r')
 			case 't':
-				bytes = append (bytes, '\t')
+				bytes = append(bytes, '\t')
 			default:
-				bytes = append (bytes, c)
+				bytes = append(bytes, c)
 			}
 			continue
 		} else if c == '"' {
-			return string (bytes)
+			return string(bytes)
 		} else {
-			bytes = append (bytes, c)
+			bytes = append(bytes, c)
 			continue
 		}
 	}
 }
 
-func expect (b byte) {
-	c, err := getc ()
+func expect(b byte) {
+	c, err := getc()
 	if err != nil {
-		panic ("unexpected EOF")
+		panic("unexpected EOF")
 	}
 	if c != b {
-		fmt.Printf ("char '%c' expected, but got '%c'\n", b, c)
-		panic ("unexpected char")
+		fmt.Printf("char '%c' expected, but got '%c'\n", b, c)
+		panic("unexpected char")
 	}
 }
 
-func readChar () string {
-	c, err := getc ()
+func readChar() string {
+	c, err := getc()
 	if err != nil {
-		panic ("invalid char literal")
+		panic("invalid char literal")
 	}
 	if c == '\\' {
-		c, err = getc ()
+		c, err = getc()
 	}
-	expect ('\'')
-	return string ([]byte{c})
+	expect('\'')
+	return string([]byte{c})
 }
 
-
-func tokenize (s string) []*Token {
-	var r [] *Token
-	s = strings.Trim (s, "\n")
+func tokenize(s string) []*Token {
+	var r []*Token
+	s = strings.Trim(s, "\n")
 	source = s
 	for {
-		c, err := getc ()
+		c, err := getc()
 		if err != nil {
 			return r
 		}
@@ -226,39 +221,38 @@ func tokenize (s string) []*Token {
 		switch {
 		case c == 0:
 			return r
-		case isNumber (c):
-			sval := readNumber (c)
-			tok = &Token {typ: "int", sval: sval}
-		case c=='\'':
-			sval := readChar ()
-			tok = &Token {typ: "rune", sval: sval}
-		case c=='"':
-			sval := readString ()
-			tok = &Token {typ: "string", sval: sval}
-		case c==' ' || c=='\t' || c=='\n' || c=='\r':
-			skipSpace ()
+		case isNumber(c):
+			sval := readNumber(c)
+			tok = &Token{typ: "int", sval: sval}
+		case c == '\'':
+			sval := readChar()
+			tok = &Token{typ: "rune", sval: sval}
+		case c == '"':
+			sval := readString()
+			tok = &Token{typ: "string", sval: sval}
+		case c == ' ' || c == '\t' || c == '\n' || c == '\r':
+			skipSpace()
 			continue
 			// tok = &Token {typ: "space", sval: " "}
-		case isPunctuation (c):
-			tok = &Token {typ: "punct", sval: fmt.Sprintf ("%c", c)}
-		case c=='=':
-			tok = &Token {typ: "assignment", sval: fmt.Sprintf ("%c", c)}
+		case isPunctuation(c):
+			tok = &Token{typ: "punct", sval: fmt.Sprintf("%c", c)}
+		case c == '=':
+			tok = &Token{typ: "assignment", sval: fmt.Sprintf("%c", c)}
 		default:
-			sval := readName (c)
-			if isReserved (sval) {
-				tok = &Token {typ: "reserved", sval: sval}
+			sval := readName(c)
+			if isReserved(sval) {
+				tok = &Token{typ: "reserved", sval: sval}
 			} else {
-				tok = &Token {typ: "identifier", sval: sval}
-				makeSymbol (sval, "int")
+				tok = &Token{typ: "identifier", sval: sval}
+				makeSymbol(sval, "int")
 			}
 		}
-		r = append (r, tok)
+		r = append(r, tok)
 	}
 }
 
-func renderTokens (tokens []*Token) {
-	debugPrint ("==== Start Dump Tokens ====")
-	debugTokens (tokens)
-	debugPrint ("==== End Dump Tokens ====")
+func renderTokens(tokens []*Token) {
+	debugPrint("==== Start Dump Tokens ====")
+	debugTokens(tokens)
+	debugPrint("==== End Dump Tokens ====")
 }
-

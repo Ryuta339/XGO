@@ -6,62 +6,58 @@ import (
 	"os"
 )
 
-
 var errorFlag = false
 var astMode = false
 
-func putError (errorMsg string, v ...interface{}) {
-	fmt.Fprintf (os.Stderr, errorMsg, v)
-	fmt.Fprintln (os.Stderr, "")
+func putError(errorMsg string, v ...interface{}) {
+	fmt.Fprintf(os.Stderr, errorMsg, v)
+	fmt.Fprintln(os.Stderr, "")
 	errorFlag = true
 }
 
-
-func readFile (filename string) string {
-	bytes, ok := ioutil.ReadFile (filename)
+func readFile(filename string) string {
+	bytes, ok := ioutil.ReadFile(filename)
 	if ok != nil {
-		panic (ok)
+		panic(ok)
 	}
-	return string (bytes);
+	return string(bytes)
 }
 
-
-
-func main () {
+func main() {
 	debugMode = true
 
 	var sourceFile string
-	if len (os.Args) > 1 {
+	if len(os.Args) > 1 {
 		sourceFile = os.Args[1] + ".go"
 	} else {
 		sourceFile = "/dev/stdin"
 	}
-	if len(os.Args)>2  && os.Args[2]=="-a" {
+	if len(os.Args) > 2 && os.Args[2] == "-a" {
 		astMode = true
 	}
 
-	s := readFile (sourceFile)
+	s := readFile(sourceFile)
 
-	tokens = tokenize (s)
-	if len (tokens) == 0 {
-		panic ("no tokens")
+	tokens = tokenize(s)
+	if len(tokens) == 0 {
+		panic("no tokens")
 	}
 	tokenIndex = 0
 	if debugMode {
-		renderTokens (tokens)
+		renderTokens(tokens)
 	}
-	ast := parse ()
+	ast := parse()
 	if errorFlag {
-		panic ("internal error")
+		panic("internal error")
 	}
 	if debugMode {
-		debugPrint ("==== Start Dump Ast ====")
-		debugAst (ast)
-		debugPrint ("==== End Dump Ast ====")
+		debugPrint("==== Start Dump Ast ====")
+		debugAst(ast)
+		debugPrint("==== End Dump Ast ====")
 	}
 	if astMode {
-		showAst (ast, 0)
+		showAst(ast, 0)
 	} else {
-		generate (ast)
+		generate(ast)
 	}
 }
