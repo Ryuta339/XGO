@@ -1,63 +1,99 @@
 package main
 
 import (
-	"fmt"
-	//	"io/ioutil"
 	"errors"
-	"os"
+	"fmt"
 	"strings"
 )
 
+var ts *TokenStream
+var source string
+var sourceIndex int
+
+/* ================================
+ * Token
+ *     implements Debuggable
+ * ================================ */
 type Token struct {
 	typ  string
 	sval string
 }
 
-var tokens []*Token
-var tokenIndex int
-var source string
-var sourceIndex int
+// implements Debuggalbe
+func (tok *Token) debug() {
+	debugPrint(fmt.Sprintf("tok:type=%s, sval=%s", tok.typ, tok.sval))
+}
 
-func nextToken() {
-	if tokenIndex <= len(tokens)-1 {
-		tokenIndex++
+/* ================================
+ * TokenStream
+ *     implements Debuggable
+ * ================================ */
+type TokenStream struct {
+	index  int
+	tokens []*Token
+}
+
+func (ts *TokenStream) nextToken() {
+	if ts.index <= len(ts.tokens)-1 {
+		ts.index++
 	}
 }
 
-func lookahead(num int) *Token {
-	idx := tokenIndex + num - 1
-	if idx <= len(tokens)-1 {
-		return tokens[idx]
+func (ts *TokenStream) lookahead(num int) *Token {
+	idx := ts.index + num - 1
+	if idx <= len(ts.tokens)-1 {
+		return ts.tokens[idx]
 	}
 	return nil
 }
 
-func consumeToken(expected string) {
-	tok := lookahead(1)
+func (ts *TokenStream) consumeToken(expected string) {
+	tok := ts.lookahead(1)
 	if tok == nil {
-		fmt.Printf("Unexpected termination.\n")
-		panic("internal error")
+		putError("Unexpected termination.\n")
 	}
 	if expected == tok.sval {
-		nextToken()
+		ts.nextToken()
 	} else {
-		fmt.Printf("Unexpected token %v.\n", tok.sval)
-		panic("internal error")
+		putError("Expected token %s, but got %s.\n", expected, tok.sval)
 	}
 }
 
-func debugToken(tok *Token) {
-	if tok == nil {
-		fmt.Fprintf(os.Stderr, "nil\n")
-	}
-	debugPrint(fmt.Sprintf("tok:type=%s, sval=%s", tok.typ, tok.sval))
-}
-
-func debugTokens(tokens []*Token) {
-	for _, tok := range tokens {
+// implements Debuggable
+func (ts *TokenStream) debug() {
+	for _, tok := range ts.tokens {
 		debugToken(tok)
 	}
 }
+
+func (ts *TokenStream) renderTokens() {
+	debugPrint("==== Start Dump Tokens ====")
+	ts.debug()
+	debugPrint("==== End Dump Tokens ====")
+}
+
+/* ================================ */
+func newTokenStream(tokens []*Token) *TokenStream {
+	return &TokenStream{
+		index:  0,
+		tokens: tokens,
+	}
+}
+
+// wrapper
+func nextToken() {
+	ts.nextToken()
+}
+
+func lookahead(num int) *Token {
+	return ts.lookahead(num)
+}
+
+func consumeToken(expected string) {
+	ts.consumeToken(expected)
+}
+
+/* ================================ */
 
 func getc() (byte, error) {
 	if sourceIndex >= len(source) {
@@ -208,19 +244,21 @@ func readChar() string {
 	return string([]byte{c})
 }
 
-func tokenize(s string) []*Token {
+func tokenize(s string) {
 	var r []*Token
 	s = strings.Trim(s, "\n")
 	source = s
 	for {
 		c, err := getc()
 		if err != nil {
-			return r
+			ts = newTokenStream(r)
+			return
 		}
 		var tok *Token
 		switch {
 		case c == 0:
-			return r
+			ts = newTokenStream(r)
+			return
 		case isNumber(c):
 			sval := readNumber(c)
 			tok = &Token{typ: "int", sval: sval}
@@ -249,10 +287,4 @@ func tokenize(s string) []*Token {
 		}
 		r = append(r, tok)
 	}
-}
-
-func renderTokens(tokens []*Token) {
-	debugPrint("==== Start Dump Tokens ====")
-	debugTokens(tokens)
-	debugPrint("==== End Dump Tokens ====")
 }

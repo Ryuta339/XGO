@@ -38,14 +38,12 @@ func main() {
 
 	s := readFile(sourceFile)
 
-	tokens = tokenize(s)
-	if len(tokens) == 0 {
-		panic("no tokens")
-	}
-	tokenIndex = 0
-	if debugMode {
-		renderTokens(tokens)
-	}
+	tokenize(s)
+	/*
+		if debugMode {
+			renderTokens()
+		}
+	*/
 	ast := parse()
 	if errorFlag {
 		panic("internal error")
