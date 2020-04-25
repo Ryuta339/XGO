@@ -1,5 +1,12 @@
 package "main"
 
+func f () {
+	puts ("")
+	puts ("hello")
+	puts ("world")
+}
+
+
 func main () {
 	printf ("%d\n", 2 + 5)
 	printf ("%d\n", 10 - 4)
@@ -7,9 +14,5 @@ func main () {
 	printf ("%d\n", 1 * 2 + 3 * 4)
 	printf ("%d\n", 1 + 2 * 3 + 4)
 	printf ("%d\n", 6 - 3 - 2)
-	{
-		puts ("")
-		puts ("hello")
-		puts ("world")
-	}
+	f ()
 }

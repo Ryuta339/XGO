@@ -258,13 +258,7 @@ func tokenize (s string) []*Token {
 
 func renderTokens (tokens []*Token) {
 	debugPrint ("==== Start Dump Tokens ====")
-	for _, tok := range tokens {
-		if tok.typ == "string" {
-			fmt.Fprintf (os.Stderr, "\"%s\"\n", tok.sval)
-		} else {
-			fmt.Fprintf (os.Stderr, "%s\n", tok.sval)
-		}
-	}
+	debugTokens (tokens)
 	debugPrint ("==== End Dump Tokens ====")
 }
 

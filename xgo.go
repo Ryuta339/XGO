@@ -7,8 +7,8 @@ import (
 )
 
 
-var debugMode = false
 var errorFlag = false
+var astMode = false
 
 func putError (errorMsg string, v ...interface{}) {
 	fmt.Fprintf (os.Stderr, errorMsg, v)
@@ -25,20 +25,10 @@ func readFile (filename string) string {
 	return string (bytes);
 }
 
-func debugPrint (s string) {
-	if debugMode {
-		fmt.Fprintf (os.Stdout, "# %s\n", s)
-	}
-}
 
-func debugPrintWithVariable (name string, v interface{}) {
-	debugPrint (fmt.Sprintf ("%s=%v", name, v))
-}
 
 func main () {
 	debugMode = true
-
-	astMode := false
 
 	var sourceFile string
 	if len (os.Args) > 1 {
@@ -58,9 +48,7 @@ func main () {
 	}
 	tokenIndex = 0
 	if debugMode {
-		debugPrint ("==== Start Dump Tokens ====")
-		debugTokens (tokens)
-		debugPrint ("==== End Dump Tokens ====")
+		renderTokens (tokens)
 	}
 	ast := parse ()
 	if errorFlag {
