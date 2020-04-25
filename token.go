@@ -167,11 +167,11 @@ func readString() string {
 			}
 			switch c {
 			case 'n':
-				bytes = append(bytes, '\n')
+				bytes = append(bytes, '\\', 'n')
 			case 'r':
-				bytes = append(bytes, '\r')
+				bytes = append(bytes, '\\', 'r')
 			case 't':
-				bytes = append(bytes, '\t')
+				bytes = append(bytes, '\\', 't')
 			default:
 				bytes = append(bytes, c)
 			}

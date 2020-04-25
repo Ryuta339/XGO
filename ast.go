@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"strconv"
 )
 
 /*** interface definitioins ***/
@@ -101,7 +102,7 @@ func (ic *IntegerConstant) emitConstant() {
 
 // implements Constant
 func (ic *IntegerConstant) toStringValue() string {
-	return string(ic.ival)
+	return strconv.Itoa(ic.ival)
 }
 
 /* ================================================================ */
@@ -502,5 +503,5 @@ func (as *AstString) debug() {
 // implements ast
 func (as *AstString) show(depth int) {
 	printSpace(depth)
-	fmt.Printf("AstString (%s)\n", as.sval)
+	fmt.Printf("AstString (\"%s\")\n", as.sval)
 }
