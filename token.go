@@ -7,8 +7,7 @@ import (
 )
 
 var ts *TokenStream
-var source string
-var sourceIndex int
+var bs *ByteStream
 
 /* ================================
  * Token
@@ -95,20 +94,31 @@ func consumeToken(expected string) {
 
 /* ================================ */
 
-func getc() (byte, error) {
-	if sourceIndex >= len(source) {
+/* ================================
+ * ByteStream
+ * ================================ */
+
+type ByteStream struct {
+	source string
+	index  int
+}
+
+func (bs *ByteStream) getc() (byte, error) {
+	if bs.index >= len(bs.source) {
 		return 0, errors.New("EOF")
 	}
-	r := source[sourceIndex]
-	sourceIndex++
+	r := bs.source[bs.index]
+	bs.index++
 	return r, nil
 }
 
-func ungetc() {
-	if sourceIndex > 0 {
-		sourceIndex--
+func (bs *ByteStream) ungetc() {
+	if bs.index > 0 {
+		bs.index--
 	}
 }
+
+/* ================================ */
 
 func isPunctuation(b byte) bool {
 	switch b {
@@ -127,7 +137,7 @@ func isNumber(b byte) bool {
 func readNumber(b byte) string {
 	var chars = []byte{b}
 	for {
-		c, err := getc()
+		c, err := bs.getc()
 		if err != nil {
 			return string(chars)
 		}
@@ -135,7 +145,7 @@ func readNumber(b byte) string {
 			chars = append(chars, c)
 			continue
 		} else {
-			ungetc()
+			bs.ungetc()
 			return string(chars)
 		}
 	}
@@ -147,14 +157,14 @@ func isSpace(b byte) bool {
 
 func skipSpace() {
 	for {
-		c, err := getc()
+		c, err := bs.getc()
 		if err != nil {
 			return
 		}
 		if isSpace(c) {
 			continue
 		} else {
-			ungetc()
+			bs.ungetc()
 			return
 		}
 	}
@@ -171,7 +181,7 @@ func isName(b byte) bool {
 func readName(b byte) string {
 	var bytes = []byte{b}
 	for {
-		c, err := getc()
+		c, err := bs.getc()
 		if err != nil {
 			return string(bytes)
 		}
@@ -179,7 +189,7 @@ func readName(b byte) string {
 			bytes = append(bytes, c)
 			continue
 		} else {
-			ungetc()
+			bs.ungetc()
 			return string(bytes)
 		}
 	}
@@ -192,12 +202,12 @@ func isReserved(word string) bool {
 func readString() string {
 	var bytes = []byte{}
 	for {
-		c, err := getc()
+		c, err := bs.getc()
 		if err != nil {
 			panic("invalid string literal")
 		}
 		if c == '\\' {
-			c, err = getc()
+			c, err = bs.getc()
 			if err != nil {
 				panic("invalid string literal")
 			}
@@ -222,23 +232,22 @@ func readString() string {
 }
 
 func expect(b byte) {
-	c, err := getc()
+	c, err := bs.getc()
 	if err != nil {
 		panic("unexpected EOF")
 	}
 	if c != b {
-		fmt.Printf("char '%c' expected, but got '%c'\n", b, c)
-		panic("unexpected char")
+		putError("char '%c' expected, but got '%c'\n", b, c)
 	}
 }
 
 func readChar() string {
-	c, err := getc()
+	c, err := bs.getc()
 	if err != nil {
 		panic("invalid char literal")
 	}
 	if c == '\\' {
-		c, err = getc()
+		c, err = bs.getc()
 	}
 	expect('\'')
 	return string([]byte{c})
@@ -247,9 +256,12 @@ func readChar() string {
 func tokenize(s string) {
 	var r []*Token
 	s = strings.Trim(s, "\n")
-	source = s
+	bs = &ByteStream{
+		source : s,
+		index  : 0,
+	}
 	for {
-		c, err := getc()
+		c, err := bs.getc()
 		if err != nil {
 			ts = newTokenStream(r)
 			return
