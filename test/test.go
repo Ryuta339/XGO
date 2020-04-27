@@ -1,5 +1,7 @@
 package "main"
 
+import "fmt"
+
 func f () {
 	puts ("")
 	puts ("hello")

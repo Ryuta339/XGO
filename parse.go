@@ -18,6 +18,7 @@ func parseTranslationUnit() Ast {
 		return nil
 	}
 	packname := parsePackageDeclaration()
+	packages := parseImport()
 	var childs []Ast
 
 	for {
@@ -25,6 +26,7 @@ func parseTranslationUnit() Ast {
 		if tok == nil {
 			return &TranslationUnit{
 				packname: packname,
+				packages: packages,
 				childs:   childs,
 			}
 		}
@@ -40,6 +42,7 @@ func parseTranslationUnit() Ast {
 
 	return &TranslationUnit{
 		packname: packname,
+		packages: packages,
 		childs:   childs,
 	}
 }
@@ -61,6 +64,32 @@ func parsePackageDeclaration() string {
 	packname := tok.sval
 	nextToken()
 	return packname
+}
+
+func parseImport() []string {
+	var packages []string
+	for {
+		tok := lookahead (1)
+		if tok == nil {
+			return packages
+		}
+		if tok.typ != "reserved" || tok.sval != "import" {
+			return packages
+		}
+		consumeToken ("import")
+
+		tok = lookahead (1)
+		if tok == nil {
+			putError ("Unexpected termination")
+			return packages
+		}
+		if tok.typ != "string" {
+			return packages
+		}
+		packages = append (packages, tok.sval)
+		nextToken ()
+	}
+	return packages
 }
 
 func parseFunctionDefinition() Ast {

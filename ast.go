@@ -110,8 +110,8 @@ func (ic *IntegerConstant) toStringValue() string {
  * ================================ */
 type TranslationUnit struct {
 	packname string
-	//	packages  []string
-	childs []Ast
+	packages []string
+	childs   []Ast
 }
 
 // implements Ast
@@ -124,7 +124,11 @@ func (tu *TranslationUnit) emit() {
 // implements Ast
 func (tu *TranslationUnit) show(depth int) {
 	printSpace(depth)
-	fmt.Printf("TranslationUnit (%s)\n", tu.packname)
+	fmt.Printf("TranslationUnit (%s) {\n", tu.packname)
+	for _, pkg := range tu.packages {
+		fmt.Printf ("(import \"%s\")\n", pkg)
+	}
+	fmt.Printf ("}\n")
 	for _, child := range tu.childs {
 		child.show(depth + 1)
 	}

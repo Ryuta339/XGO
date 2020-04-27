@@ -235,7 +235,7 @@ func readName(b byte) string {
 }
 
 func isReserved(word string) bool {
-	return word == "func" || word == "package"
+	return word == "func" || word == "package" || word == "import"
 }
 
 func readString() string {
