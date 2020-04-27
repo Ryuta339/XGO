@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 )
 
@@ -15,13 +14,6 @@ func putError(errorMsg string, v ...interface{}) {
 	errorFlag = true
 }
 
-func readFile(filename string) string {
-	bytes, ok := ioutil.ReadFile(filename)
-	if ok != nil {
-		panic(ok)
-	}
-	return string(bytes)
-}
 
 func main() {
 	debugMode = true
@@ -36,9 +28,7 @@ func main() {
 		astMode = true
 	}
 
-	s := readFile(sourceFile)
-
-	tokenize(s)
+	tokenize(sourceFile)
 	/*
 		if debugMode {
 			renderTokens()

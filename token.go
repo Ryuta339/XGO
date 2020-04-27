@@ -3,24 +3,52 @@ package main
 import (
 	"errors"
 	"fmt"
-	"strings"
+	"io/ioutil"
 )
 
-var ts *TokenStream
-var bs *ByteStream
+var tStream *TokenStream
+var bStream *ByteStream
+
+/* ================================
+ * SorceFile
+ * ================================ */
+type SourceFile struct {
+	filename string
+	line     int
+	column   int
+}
 
 /* ================================
  * Token
- *     implements Debuggable
+ *     implements Debuggable and fmt.Stringer
  * ================================ */
 type Token struct {
 	typ  string
 	sval string
+	SourceFile
 }
 
 // implements Debuggalbe
 func (tok *Token) debug() {
 	debugPrint(fmt.Sprintf("tok:type=%s, sval=%s", tok.typ, tok.sval))
+}
+
+// implements fmt.Stringer
+func (tok *Token) String() string {
+	return fmt.Sprintf ("(%s \"%s\" in%s: line %d: column %d)",
+		tok.typ, tok.sval, tok.filename, tok.line, tok.column)
+}
+
+func newToken (typ string, sval string) *Token {
+	return &Token{
+		typ: typ,
+		sval: sval,
+		SourceFile: SourceFile{
+			filename: bStream.filename,
+			line    : bStream.line,
+			column  : bStream.column,
+		},
+	}
 }
 
 /* ================================
@@ -81,15 +109,15 @@ func newTokenStream(tokens []*Token) *TokenStream {
 
 // wrapper
 func nextToken() {
-	ts.nextToken()
+	tStream.nextToken()
 }
 
 func lookahead(num int) *Token {
-	return ts.lookahead(num)
+	return tStream.lookahead(num)
 }
 
 func consumeToken(expected string) {
-	ts.consumeToken(expected)
+	tStream.consumeToken(expected)
 }
 
 /* ================================ */
@@ -99,8 +127,9 @@ func consumeToken(expected string) {
  * ================================ */
 
 type ByteStream struct {
-	source string
-	index  int
+	source   string
+	index    int
+	SourceFile
 }
 
 func (bs *ByteStream) getc() (byte, error) {
@@ -108,13 +137,23 @@ func (bs *ByteStream) getc() (byte, error) {
 		return 0, errors.New("EOF")
 	}
 	r := bs.source[bs.index]
+	if r == '\r' || r == '\n' {
+		bs.line++
+		bs.column = 0
+	}
 	bs.index++
+	bs.column++
 	return r, nil
 }
 
 func (bs *ByteStream) ungetc() {
 	if bs.index > 0 {
 		bs.index--
+		r := bs.source[bs.index]
+		if r == '\r' || r == '\n' {
+			bs.line--
+			bs.column = -1
+		}
 	}
 }
 
@@ -137,7 +176,7 @@ func isNumber(b byte) bool {
 func readNumber(b byte) string {
 	var chars = []byte{b}
 	for {
-		c, err := bs.getc()
+		c, err := bStream.getc()
 		if err != nil {
 			return string(chars)
 		}
@@ -145,7 +184,7 @@ func readNumber(b byte) string {
 			chars = append(chars, c)
 			continue
 		} else {
-			bs.ungetc()
+			bStream.ungetc()
 			return string(chars)
 		}
 	}
@@ -157,14 +196,14 @@ func isSpace(b byte) bool {
 
 func skipSpace() {
 	for {
-		c, err := bs.getc()
+		c, err := bStream.getc()
 		if err != nil {
 			return
 		}
 		if isSpace(c) {
 			continue
 		} else {
-			bs.ungetc()
+			bStream.ungetc()
 			return
 		}
 	}
@@ -181,7 +220,7 @@ func isName(b byte) bool {
 func readName(b byte) string {
 	var bytes = []byte{b}
 	for {
-		c, err := bs.getc()
+		c, err := bStream.getc()
 		if err != nil {
 			return string(bytes)
 		}
@@ -189,7 +228,7 @@ func readName(b byte) string {
 			bytes = append(bytes, c)
 			continue
 		} else {
-			bs.ungetc()
+			bStream.ungetc()
 			return string(bytes)
 		}
 	}
@@ -202,12 +241,12 @@ func isReserved(word string) bool {
 func readString() string {
 	var bytes = []byte{}
 	for {
-		c, err := bs.getc()
+		c, err := bStream.getc()
 		if err != nil {
 			panic("invalid string literal")
 		}
 		if c == '\\' {
-			c, err = bs.getc()
+			c, err = bStream.getc()
 			if err != nil {
 				panic("invalid string literal")
 			}
@@ -232,7 +271,7 @@ func readString() string {
 }
 
 func expect(b byte) {
-	c, err := bs.getc()
+	c, err := bStream.getc()
 	if err != nil {
 		panic("unexpected EOF")
 	}
@@ -242,34 +281,39 @@ func expect(b byte) {
 }
 
 func readChar() string {
-	c, err := bs.getc()
+	c, err := bStream.getc()
 	if err != nil {
 		panic("invalid char literal")
 	}
 	if c == '\\' {
-		c, err = bs.getc()
+		c, err = bStream.getc()
 	}
 	expect('\'')
 	return string([]byte{c})
 }
 
-func tokenize(s string) {
+func tokenize(filename string) {
+	s := readFile (filename)
 	var r []*Token
-	s = strings.Trim(s, "\n")
-	bs = &ByteStream{
+	bStream = &ByteStream{
 		source : s,
 		index  : 0,
+		SourceFile: SourceFile{
+			filename: filename,
+			line    : 1,
+			column  : 0,
+		},
 	}
 	for {
-		c, err := bs.getc()
+		c, err := bStream.getc()
 		if err != nil {
-			ts = newTokenStream(r)
+			tStream = newTokenStream(r)
 			return
 		}
 		var tok *Token
 		switch {
 		case c == 0:
-			ts = newTokenStream(r)
+			tStream = newTokenStream(r)
 			return
 		case isNumber(c):
 			sval := readNumber(c)
@@ -299,4 +343,12 @@ func tokenize(s string) {
 		}
 		r = append(r, tok)
 	}
+}
+
+func readFile(filename string) string {
+	bytes, ok := ioutil.ReadFile(filename)
+	if ok != nil {
+		panic(ok)
+	}
+	return string(bytes)
 }
