@@ -1,6 +1,10 @@
 package "main"
 
 import "fmt"
+import (
+	"strings"
+	"strconv"
+)
 
 func f () {
 	puts ("")

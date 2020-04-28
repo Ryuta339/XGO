@@ -83,11 +83,36 @@ func parseImport() []string {
 			putError ("Unexpected termination")
 			return packages
 		}
-		if tok.typ != "string" {
+
+		switch tok.typ {
+		case "string":
+			packages = append (packages, tok.sval)
+			nextToken ()
+		case "punct":
+			if tok.sval != "(" {
+				return packages
+			}
+			consumeToken ("(")
+			for {
+				tok = lookahead (1)
+				if tok == nil {
+					putError ("Expected ), but got EOF.")
+					return packages
+				}
+				if tok.typ == "string" {
+					packages = append (packages, tok.sval)
+					nextToken ()
+				} else if tok.typ == "punct" && tok.sval == ")" {
+					consumeToken (")")
+					break
+				} else {
+					putError ("Expected \" or ), but got %s.", tok.sval)
+					return packages
+				}
+			}
+		default:
 			return packages
 		}
-		packages = append (packages, tok.sval)
-		nextToken ()
 	}
 	return packages
 }
