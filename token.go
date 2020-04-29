@@ -6,6 +6,34 @@ import (
 	"io/ioutil"
 )
 
+var reservedList = []string{
+	"break",
+	"default",
+	"func",
+	"interface",
+	"select",
+	"case",
+	"defer",
+	"go",
+	"map",
+	"struct",
+	"chan",
+	"else",
+	"goto",
+	"package",
+	"switch",
+	"const",
+	"fallthrough",
+	"if",
+	"range",
+	"type",
+	"continue",
+	"for",
+	"import",
+	"return",
+	"var",
+}
+
 var tStream *TokenStream
 var bStream *ByteStream
 
@@ -35,18 +63,50 @@ func (tok *Token) debug() {
 
 // implements fmt.Stringer
 func (tok *Token) String() string {
-	return fmt.Sprintf ("(%s \"%s\" in%s: line %d: column %d)",
+	return fmt.Sprintf("(%s \"%s\" in%s: line %d: column %d)",
 		tok.typ, tok.sval, tok.filename, tok.line, tok.column)
 }
 
-func newToken (typ string, sval string) *Token {
+func (tok *Token) isPunct(s string) bool {
+	return tok != nil && tok.typ == "punct" && tok.sval == s
+}
+
+func (tok *Token) isReserved(s string) bool {
+	return tok != nil && tok.typ == "reserved" && tok.sval == s
+}
+
+func (tok *Token) isString(s string) bool {
+	return tok != nil && tok.typ == "string" && tok.sval == s
+}
+
+func (tok *Token) isIdentifier(s string) bool {
+	return tok != nil && tok.typ == "identifier" && tok.sval == s
+}
+
+func (tok *Token) isTypePunct() bool {
+	return tok != nil && tok.typ == "punct"
+}
+
+func (tok *Token) isTypeReserved() bool {
+	return tok != nil && tok.typ == "keyword"
+}
+
+func (tok *Token) isTypeString() bool {
+	return tok != nil && tok.typ == "string"
+}
+
+func (tok *Token) isTypeIdentifier() bool {
+	return tok != nil && tok.typ == "identifier"
+}
+
+func newToken(typ string, sval string) *Token {
 	return &Token{
-		typ: typ,
+		typ:  typ,
 		sval: sval,
 		SourceFile: SourceFile{
 			filename: bStream.filename,
-			line    : bStream.line,
-			column  : bStream.column,
+			line:     bStream.line,
+			column:   bStream.column,
 		},
 	}
 }
@@ -127,8 +187,8 @@ func consumeToken(expected string) {
  * ================================ */
 
 type ByteStream struct {
-	source   string
-	index    int
+	source string
+	index  int
 	SourceFile
 }
 
@@ -235,7 +295,12 @@ func readName(b byte) string {
 }
 
 func isReserved(word string) bool {
-	return word == "func" || word == "package" || word == "import"
+	for _, v := range reservedList {
+		if word == v {
+			return true
+		}
+	}
+	return false
 }
 
 func readString() string {
@@ -293,15 +358,15 @@ func readChar() string {
 }
 
 func tokenize(filename string) {
-	s := readFile (filename)
+	s := readFile(filename)
 	var r []*Token
 	bStream = &ByteStream{
-		source : s,
-		index  : 0,
+		source: s,
+		index:  0,
 		SourceFile: SourceFile{
 			filename: filename,
-			line    : 1,
-			column  : 0,
+			line:     1,
+			column:   0,
 		},
 	}
 	for {
