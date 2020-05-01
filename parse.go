@@ -14,7 +14,7 @@ func parse() Ast {
 
 func parseTranslationUnit() Ast {
 	tok := lookahead(1)
-	if tok == nil {
+	if tok ==  nil {
 		return nil
 	}
 	packname := parsePackageDeclaration()
@@ -23,16 +23,15 @@ func parseTranslationUnit() Ast {
 
 	for {
 		tok = lookahead(1)
-		if tok == nil {
+		
+		switch  {
+		case tok == nil:
 			return &TranslationUnit{
 				packname: packname,
 				packages: packages,
 				childs:   childs,
 			}
-		}
-
-		switch tok.sval {
-		case "func":
+		case tok.isReserved("func"):
 			ast := parseFunctionDefinition()
 			childs = append(childs, ast)
 		default:
@@ -49,66 +48,69 @@ func parseTranslationUnit() Ast {
 
 func parsePackageDeclaration() string {
 	tok := lookahead(1)
-	if tok == nil {
-		putError("No package declaration.")
-	}
-	if tok.typ != "reserved" || tok.sval != "package" {
-		putError("No package declaration.")
-	}
-	consumeToken("package")
+	packname := ""
 
-	tok = lookahead(1)
-	if tok.typ != "string" {
-		putError("%s is not allowed to be package name.", tok.sval)
+	switch {
+	case tok == nil:
+		putError("No package declaration.")
+	case tok.isReserved("package"):
+		consumeToken("package")
+		tok = lookahead(1)
+		if tok.isTypeString() {
+			packname = tok.sval
+			nextToken()
+		} else {
+			putError("%s is not allowed to be package name.", tok.sval)
+		}
+	default:
+		putError("No package declaration.")
 	}
-	packname := tok.sval
-	nextToken()
+	
 	return packname
 }
 
 func parseImport() []string {
+	// naseted switch statements are crazy
 	var packages []string
 	for {
 		tok := lookahead (1)
-		if tok == nil {
-			return packages
-		}
-		if tok.typ != "reserved" || tok.sval != "import" {
-			return packages
-		}
-		consumeToken ("import")
 
-		tok = lookahead (1)
-		if tok == nil {
-			putError ("Unexpected termination")
+		switch {
+		case tok==nil:
 			return packages
-		}
+		case tok.isReserved("import"):
+			consumeToken ("import")
+			tok = lookahead (1)
 
-		switch tok.typ {
-		case "string":
-			packages = append (packages, tok.sval)
-			nextToken ()
-		case "punct":
-			if tok.sval != "(" {
+			switch {
+			case tok==nil:
+				putError ("Unexpected termination")
 				return packages
-			}
-			consumeToken ("(")
-			for {
-				tok = lookahead (1)
-				if tok == nil {
-					putError ("Expected ), but got EOF.")
-					return packages
+			case tok.isTypeString():
+				packages = append (packages, tok.sval)
+				nextToken ()
+			case tok.isPunct("("):
+				consumeToken ("(")
+parseImportLabel:
+				for {
+					tok = lookahead (1)
+					switch {
+					case tok == nil:
+						putError ("Expected ), but got EOF.")
+						return packages
+					case tok.isTypeString():
+						packages = append (packages, tok.sval)
+						nextToken ()
+					case tok.isPunct(")"):
+						consumeToken (")")
+						break parseImportLabel
+					default:
+						putError ("Expected \" or ), but got %s.", tok.sval)
+						return packages
+					}
 				}
-				if tok.typ == "string" {
-					packages = append (packages, tok.sval)
-					nextToken ()
-				} else if tok.typ == "punct" && tok.sval == ")" {
-					consumeToken (")")
-					break
-				} else {
-					putError ("Expected \" or ), but got %s.", tok.sval)
-					return packages
-				}
+			default:
+				return packages
 			}
 		default:
 			return packages
@@ -119,21 +121,27 @@ func parseImport() []string {
 
 func parseFunctionDefinition() Ast {
 	tok := lookahead(1)
-	if tok.typ != "reserved" {
-		putError("func expected, but got %v", tok.typ)
+	if ! tok.isReserved ("func") {
+		putError("Expected func, but got %s", tok.typ)
+		return nil
 	}
 	consumeToken("func")
 	tok = lookahead(1)
-	if tok.typ != "identifier" {
-		putError("Identifier expected, but got %v", tok.typ)
+	if ! tok.isTypeIdentifier() {
+		putError("Expected identifier, but got %s", tok.typ)
+		return nil
 	}
 	nextToken()
 	consumeToken("(")
 	consumeToken(")")
 	// expect Type
 	tok2 := lookahead(1)
-	if tok2.sval != "{" {
-		putError("{ expected, but got %v", tok.sval)
+	if !tok2.isPunct("{") {
+		putError("Expected {, but got %s", tok.sval)
+		return &FunctionDefinition{
+			fname: tok.sval,
+			ast  : nil,
+		}
 	}
 	ast := parseCompoundStatement()
 	return &FunctionDefinition{
@@ -147,8 +155,8 @@ func parseCompoundStatement() Ast {
 	consumeToken("{")
 	for {
 		tok := lookahead(1)
-		switch tok.sval {
-		case "}":
+		switch  {
+		case tok.isPunct("}"):
 			consumeToken("}")
 			return &CompoundStatement{
 				statements: statements,
@@ -165,8 +173,8 @@ func parseStatement() Ast {
 	var ast Ast
 
 	tok := lookahead(1)
-	switch tok.sval {
-	case "{":
+	switch {
+	case tok.isPunct("{"):
 		ast = parseCompoundStatement()
 	default:
 		ast = parseExpression()
@@ -190,14 +198,10 @@ func parseAdditiveExpression() Ast {
 	var ast Ast = parseMultiplicativeExpression()
 	for {
 		tok := lookahead(1)
-		if tok == nil {
+		switch {
+		case tok == nil:
 			return ast
-		}
-		if tok.typ != "punct" {
-			return ast
-		}
-		switch tok.sval {
-		case "+":
+		case tok.isPunct("+"):
 			consumeToken("+")
 			right := parseMultiplicativeExpression()
 			ast = &ArithmeticExpression{
@@ -205,7 +209,7 @@ func parseAdditiveExpression() Ast {
 				left:     ast,
 				right:    right,
 			}
-		case "-":
+		case tok.isPunct("-"):
 			consumeToken("-")
 			right := parseMultiplicativeExpression()
 			ast = &ArithmeticExpression{
@@ -224,14 +228,10 @@ func parseMultiplicativeExpression() Ast {
 	var ast Ast = parseUnaryExpression()
 	for {
 		tok := lookahead(1)
-		if tok == nil {
+		switch {
+		case tok == nil:
 			return ast
-		}
-		if tok.typ != "punct" {
-			return ast
-		}
-		switch tok.sval {
-		case "*":
+		case tok.isPunct("*"):
 			consumeToken("*")
 			right := parseUnaryExpression()
 			ast = &ArithmeticExpression{
@@ -239,7 +239,7 @@ func parseMultiplicativeExpression() Ast {
 				left:     ast,
 				right:    right,
 			}
-		case "/":
+		case tok.isPunct("/"):
 			consumeToken("/")
 			right := parseUnaryExpression()
 			ast = &ArithmeticExpression{
@@ -247,7 +247,7 @@ func parseMultiplicativeExpression() Ast {
 				left:     ast,
 				right:    right,
 			}
-		case "+", "-":
+		case tok.isPunct("+"), tok.isPunct("-"):
 			return ast
 		default:
 			return ast
@@ -260,8 +260,10 @@ func parseUnaryExpression() *UnaryExpression {
 	tok := lookahead(1)
 	var ast Ast
 
-	switch tok.typ {
-	case "int", "rune", "string", "identifier":
+	switch {
+	case tok == nil:
+		return nil
+	case tok.isTypeString(), tok.isTypeIdentifier(), tok.isTypeInt(), tok.isTypeRune():
 		ast = parsePrimaryExpression()
 		return &UnaryExpression{
 			operand: ast,
@@ -275,16 +277,15 @@ func parseUnaryExpression() *UnaryExpression {
 
 func parsePrimaryExpression() Ast {
 	tok := lookahead(1)
-	if tok == nil {
+	switch {
+	case tok == nil:
 		return nil
-	}
-	switch tok.typ {
-	case "int", "rune", "string":
+	case tok.isTypeInt(), tok.isTypeRune(), tok.isTypeString():
 		ast := parseConstant()
 		return &PrimaryExpression{
 			child: ast,
 		}
-	case "identifier":
+	case tok.isTypeIdentifier():
 		ast := parseIdentifierOrFuncall()
 		return &PrimaryExpression{
 			child: ast,
@@ -298,11 +299,10 @@ func parsePrimaryExpression() Ast {
 
 func parseConstant() Ast {
 	tok := lookahead(1)
-	if tok == nil {
+	switch {
+	case tok == nil:
 		putError("tok is nil\n")
-	}
-	switch tok.typ {
-	case "int":
+	case tok.isTypeInt():
 		ival, _ := strconv.Atoi(tok.sval)
 		nextToken()
 		return &AstConstant{
@@ -310,7 +310,7 @@ func parseConstant() Ast {
 				ival: ival,
 			},
 		}
-	case "rune":
+	case tok.isTypeRune():
 		rarr := []rune(tok.sval)
 		nextToken()
 		return &AstConstant{
@@ -318,7 +318,7 @@ func parseConstant() Ast {
 				rval: rarr[0],
 			},
 		}
-	case "string":
+	case tok.isTypeString():
 		nextToken()
 		ast := &AstString{
 			sval:   tok.sval,
@@ -334,13 +334,13 @@ func parseConstant() Ast {
 	return nil
 }
 
-func parseSymbol() *Identifier {
+func parseIdentifier() *Identifier {
 	tok := lookahead(1)
-	if tok == nil {
+	switch {
+	case tok == nil:
 		putError("tok is nil\n")
 		debugToken(tok)
-	}
-	if tok.typ == "symbol" {
+	case tok.isTypeIdentifier():
 		nextToken()
 		sym := findSymbol(tok.sval)
 		if sym == nil {
@@ -349,7 +349,7 @@ func parseSymbol() *Identifier {
 		return &Identifier{
 			symbol: sym,
 		}
-	} else {
+	default:
 		putError("Unexpected token %v in parseSymbol.\n", tok.sval)
 		debugToken(tok)
 	}
@@ -361,7 +361,10 @@ func parseIdentifierOrFuncall() Ast {
 	name := tok.sval
 	nextToken()
 	tok = lookahead(1)
-	if tok != nil && tok.typ == "punct" && tok.sval == "(" {
+	switch {
+	case tok==nil:
+		return nil
+	case tok.isPunct("("):
 		consumeToken("(")
 		args := parseArgumentList()
 		consumeToken(")")
@@ -379,16 +382,22 @@ func parseArgumentList() []Ast {
 	var r []Ast
 	for {
 		tok := lookahead(1)
-		if tok.sval == ")" {
+		if tok==nil {
+			putError ("Expected ), but got EOF")
+			return r
+		}
+		if tok.isPunct(")") {
 			return r
 		}
 		arg := parseExpression()
 		r = append(r, arg)
 		tok = lookahead(1)
-		switch tok.sval {
-		case ")":
+		switch {
+		case tok==nil:
+			putError ("Expected ), but got EOF")
+		case tok.isPunct(")"):
 			return r
-		case ",":
+		case tok.isPunct(","):
 			consumeToken(",")
 			continue
 		default:

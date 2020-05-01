@@ -66,6 +66,7 @@ func (tok *Token) String() string {
 		tok.typ, tok.sval, tok.filename, tok.line, tok.column)
 }
 
+
 func (tok *Token) isPunct(s string) bool {
 	return tok != nil && tok.typ == "punct" && tok.sval == s
 }
@@ -96,6 +97,14 @@ func (tok *Token) isTypeString() bool {
 
 func (tok *Token) isTypeIdentifier() bool {
 	return tok != nil && tok.typ == "identifier"
+}
+
+func (tok *Token) isTypeInt() bool {
+	return tok != nil && tok.typ == "int"
+}
+
+func (tok *Token) isTypeRune() bool {
+	return tok != nil && tok.typ == "rune"
 }
 
 func newToken(typ string, sval string) *Token {
