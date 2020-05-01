@@ -31,7 +31,6 @@ func showAst(ast Ast, depth int) {
 	ast.show(depth)
 }
 
-
 /* ===============================
  * Arithmetic operators implementation
  * =============================== */
@@ -126,9 +125,9 @@ func (tu *TranslationUnit) show(depth int) {
 	printSpace(depth)
 	fmt.Printf("TranslationUnit (%s) {\n", tu.packname)
 	for _, pkg := range tu.packages {
-		fmt.Printf ("(import \"%s\")\n", pkg)
+		fmt.Printf("(import \"%s\")\n", pkg)
 	}
-	fmt.Printf ("}\n")
+	fmt.Printf("}\n")
 	for _, child := range tu.childs {
 		child.show(depth + 1)
 	}

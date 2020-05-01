@@ -14,7 +14,7 @@ func parse() Ast {
 
 func parseTranslationUnit() Ast {
 	tok := lookahead(1)
-	if tok ==  nil {
+	if tok == nil {
 		return nil
 	}
 	packname := parsePackageDeclaration()
@@ -23,8 +23,8 @@ func parseTranslationUnit() Ast {
 
 	for {
 		tok = lookahead(1)
-		
-		switch  {
+
+		switch {
 		case tok == nil:
 			return &TranslationUnit{
 				packname: packname,
@@ -65,53 +65,22 @@ func parsePackageDeclaration() string {
 	default:
 		putError("No package declaration.")
 	}
-	
+
 	return packname
 }
 
 func parseImport() []string {
-	// naseted switch statements are crazy
 	var packages []string
 	for {
-		tok := lookahead (1)
+		tok := lookahead(1)
 
 		switch {
-		case tok==nil:
+		case tok == nil:
 			return packages
 		case tok.isReserved("import"):
-			consumeToken ("import")
-			tok = lookahead (1)
-
-			switch {
-			case tok==nil:
-				putError ("Unexpected termination")
-				return packages
-			case tok.isTypeString():
-				packages = append (packages, tok.sval)
-				nextToken ()
-			case tok.isPunct("("):
-				consumeToken ("(")
-parseImportLabel:
-				for {
-					tok = lookahead (1)
-					switch {
-					case tok == nil:
-						putError ("Expected ), but got EOF.")
-						return packages
-					case tok.isTypeString():
-						packages = append (packages, tok.sval)
-						nextToken ()
-					case tok.isPunct(")"):
-						consumeToken (")")
-						break parseImportLabel
-					default:
-						putError ("Expected \" or ), but got %s.", tok.sval)
-						return packages
-					}
-				}
-			default:
-				return packages
-			}
+			consumeToken("import")
+			ps := parseImportPackageNames()
+			packages = append(packages, ps...)
 		default:
 			return packages
 		}
@@ -119,15 +88,53 @@ parseImportLabel:
 	return packages
 }
 
+func parseImportPackageNames() []string {
+	tok := lookahead(1)
+	switch {
+	case tok == nil:
+		putError("Unexpected termination")
+		return nil
+	case tok.isTypeString():
+		nextToken()
+		return []string{tok.sval}
+	case tok.isPunct("("):
+		return parseImportParenthesis()
+	default:
+		return nil
+	}
+}
+
+func parseImportParenthesis() []string {
+	consumeToken("(")
+	var packages []string
+	for {
+		tok := lookahead(1)
+		switch {
+		case tok == nil:
+			putError("Expected ), but got EOF.")
+			return packages
+		case tok.isTypeString():
+			packages = append(packages, tok.sval)
+			nextToken()
+		case tok.isPunct(")"):
+			consumeToken(")")
+			return packages
+		default:
+			putError("Expected \" or ), but got %s.", tok.sval)
+			return packages
+		}
+	}
+}
+
 func parseFunctionDefinition() Ast {
 	tok := lookahead(1)
-	if ! tok.isReserved ("func") {
+	if !tok.isReserved("func") {
 		putError("Expected func, but got %s", tok.typ)
 		return nil
 	}
 	consumeToken("func")
 	tok = lookahead(1)
-	if ! tok.isTypeIdentifier() {
+	if !tok.isTypeIdentifier() {
 		putError("Expected identifier, but got %s", tok.typ)
 		return nil
 	}
@@ -140,7 +147,7 @@ func parseFunctionDefinition() Ast {
 		putError("Expected {, but got %s", tok.sval)
 		return &FunctionDefinition{
 			fname: tok.sval,
-			ast  : nil,
+			ast:   nil,
 		}
 	}
 	ast := parseCompoundStatement()
@@ -155,7 +162,7 @@ func parseCompoundStatement() Ast {
 	consumeToken("{")
 	for {
 		tok := lookahead(1)
-		switch  {
+		switch {
 		case tok.isPunct("}"):
 			consumeToken("}")
 			return &CompoundStatement{
@@ -362,7 +369,7 @@ func parseIdentifierOrFuncall() Ast {
 	nextToken()
 	tok = lookahead(1)
 	switch {
-	case tok==nil:
+	case tok == nil:
 		return nil
 	case tok.isPunct("("):
 		consumeToken("(")
@@ -382,8 +389,8 @@ func parseArgumentList() []Ast {
 	var r []Ast
 	for {
 		tok := lookahead(1)
-		if tok==nil {
-			putError ("Expected ), but got EOF")
+		if tok == nil {
+			putError("Expected ), but got EOF")
 			return r
 		}
 		if tok.isPunct(")") {
@@ -393,8 +400,8 @@ func parseArgumentList() []Ast {
 		r = append(r, arg)
 		tok = lookahead(1)
 		switch {
-		case tok==nil:
-			putError ("Expected ), but got EOF")
+		case tok == nil:
+			putError("Expected ), but got EOF")
 		case tok.isPunct(")"):
 			return r
 		case tok.isPunct(","):

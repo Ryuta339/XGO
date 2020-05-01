@@ -14,7 +14,6 @@ func putError(errorMsg string, v ...interface{}) {
 	errorFlag = true
 }
 
-
 func main() {
 	debugMode = true
 

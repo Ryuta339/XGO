@@ -9,8 +9,6 @@ type Debuggable interface {
 	debug()
 }
 
-
-
 var debugMode = false
 
 func debugPrint(s string) {

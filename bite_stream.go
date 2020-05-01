@@ -38,5 +38,3 @@ func (bs *ByteStream) ungetc() {
 		}
 	}
 }
-
-

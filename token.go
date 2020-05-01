@@ -66,7 +66,6 @@ func (tok *Token) String() string {
 		tok.typ, tok.sval, tok.filename, tok.line, tok.column)
 }
 
-
 func (tok *Token) isPunct(s string) bool {
 	return tok != nil && tok.typ == "punct" && tok.sval == s
 }
