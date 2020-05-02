@@ -10,18 +10,19 @@ type NameSpace interface {
 }
 
 type LocalVariable struct {
-	typ string
+	gtype  string
+	offset int
 }
 
 // implements NameSpace
 func (lv *LocalVariable) emitRightValue(sym *Symbol) {
-	emitCode("\tpushq\t-%d(%%rbp)", sym.pos*8)
-	frameHeight += 8
+	emitCode("\tpushq\t-%d(%%rbp)", sym.pos*lv.offset)
+	frameHeight += lv.offset
 }
 func (lv *LocalVariable) emitLeftValue(sym *Symbol) {
-	emitCode("\tleaq\t-%d(%%rbp), %%rax", sym.pos*8)
+	emitCode("\tleaq\t-%d(%%rbp), %%rax", sym.pos*lv.offset)
 	emitCode("\tpushq\t%%rax")
-	frameHeight += 8
+	frameHeight += lv.offset
 }
 
 /* ================================ */
@@ -50,17 +51,20 @@ func (s *Symbol) emitSymbol(vType ValueType) {
 	}
 }
 
-var symlist []*Symbol = make([]*Symbol, 0, 4)
+var symlist []*Symbol
+var symenv  map[string]*Symbol
 
-func makeSymbol(name string, typ string) *Symbol {
+func makeSymbol(name string) *Symbol {
 	sym := &Symbol{
 		pos:  len(symlist) + 1,
 		name: name,
 		nSpace: &LocalVariable{
-			typ: typ,
+			gtype : "int",
+			offset: 8,
 		},
 	}
 	symlist = append(symlist, sym)
+	symenv[name] = sym
 	return sym
 }
 
@@ -72,4 +76,20 @@ func findSymbol(name string) *Symbol {
 	}
 	fmt.Println("Undefined symbol %s.\n", name)
 	panic("internal error")
+}
+
+func isDeclaredSymbol(name string) bool {
+	_, ok := symenv[name]
+	return ok
+}
+
+func beginSymbolBlock() {
+	symlist = make([]*Symbol, 0)
+	symenv = make(map[string]*Symbol)
+}
+
+func endSymbolBlock() []*Symbol {
+	tmp := symlist
+	symlist = nil
+	return tmp
 }

@@ -155,8 +155,14 @@ func (ts *TokenStream) consumeToken(expected string) {
 
 // implements Debuggable
 func (ts *TokenStream) debug() {
-	for _, tok := range ts.tokens {
+	for idx, tok := range ts.tokens {
+		if idx==ts.index {
+			debugPrint("=== now parsing ===")
+		}
 		debugToken(tok)
+		if idx==ts.index {
+			debugPrint("=== now parsing ===")
+		}
 	}
 }
 
@@ -185,6 +191,10 @@ func lookahead(num int) *Token {
 
 func consumeToken(expected string) {
 	tStream.consumeToken(expected)
+}
+
+func renderTokens() {
+	tStream.renderTokens()
 }
 
 /* ================================ */
@@ -373,7 +383,7 @@ func tokenize(filename string) {
 				tok = &Token{typ: "reserved", sval: sval}
 			} else {
 				tok = &Token{typ: "identifier", sval: sval}
-				makeSymbol(sval, "int")
+				// makeSymbol(sval, "int")
 			}
 		}
 		r = append(r, tok)

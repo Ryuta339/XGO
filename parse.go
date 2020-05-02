@@ -56,7 +56,7 @@ func parsePackageDeclaration() string {
 	case tok.isReserved("package"):
 		consumeToken("package")
 		tok = lookahead(1)
-		if tok.isTypeString() {
+		if tok.isTypeIdentifier() {
 			packname = tok.sval
 			nextToken()
 		} else {
@@ -140,6 +140,7 @@ func parseFunctionDefinition() Ast {
 	}
 	nextToken()
 	consumeToken("(")
+	// argument ?
 	consumeToken(")")
 	// expect Type
 	tok2 := lookahead(1)
@@ -160,13 +161,16 @@ func parseFunctionDefinition() Ast {
 func parseCompoundStatement() Ast {
 	var statements []Ast
 	consumeToken("{")
+	beginSymbolBlock()
 	for {
 		tok := lookahead(1)
 		switch {
 		case tok.isPunct("}"):
 			consumeToken("}")
+			localvars := endSymbolBlock()
 			return &CompoundStatement{
 				statements: statements,
+				localvars : localvars,
 			}
 		default:
 			var ast Ast = parseStatement()
@@ -183,6 +187,9 @@ func parseStatement() Ast {
 	switch {
 	case tok.isPunct("{"):
 		ast = parseCompoundStatement()
+	case tok.isReserved("var"):
+		ast = parseDeclarationStatement()
+		fallthrough
 	default:
 		ast = parseExpression()
 	}
@@ -192,12 +199,59 @@ func parseStatement() Ast {
 	}
 }
 
+func parseDeclarationStatement() Ast {
+	tok := lookahead(1)
+	switch {
+	case tok==nil:
+		return nil
+	case tok.isReserved("var"):
+		consumeToken("var")
+		tok2 := lookahead(1)
+		if !tok2.isTypeIdentifier() {
+			putError("Expected identifier, but got %s.", tok2.sval)
+			return nil
+		}
+		sym := makeSymbol(tok2.sval)
+		// nextToken()
+		return &DeclarationStatement{
+			sym: sym,
+		}
+	default:
+		putError("Expected var, but got %s.", tok.sval)
+		return nil
+	}
+	return nil
+}
+
 func parseExpression() Ast {
-	ast := parseAdditiveExpression()
+	ast := parseAssignmentExpression()
 	return ast
 }
 
+// こ↑こ↓
 func parseAssignmentExpression() Ast {
+	var ast Ast = parseAdditiveExpression()
+	tok := lookahead(1)
+	switch {
+	case tok==nil:
+		return ast
+	case tok.isPunct("="):
+		consumeToken("=")
+		var right Ast = parseAdditiveExpression()
+		left, ok := ast.(*Identifier)
+		if !ok {
+			putError("fatal: cannot cast %T.", ast)
+			panic("internal error")
+		}
+		return &AssignmentExpression {
+			left : left,
+			right: right,
+		}
+	case tok.isPunct(")"), tok.isPunct("}"):
+		return ast
+	default:
+		return ast
+	}
 	return nil
 }
 
@@ -224,6 +278,8 @@ func parseAdditiveExpression() Ast {
 				left:     ast,
 				right:    right,
 			}
+		case tok.isPunct("="):
+			return ast
 		default:
 			return ast
 		}
@@ -254,7 +310,7 @@ func parseMultiplicativeExpression() Ast {
 				left:     ast,
 				right:    right,
 			}
-		case tok.isPunct("+"), tok.isPunct("-"):
+		case tok.isPunct("+"), tok.isPunct("-"), tok.isPunct("="):
 			return ast
 		default:
 			return ast
@@ -263,7 +319,7 @@ func parseMultiplicativeExpression() Ast {
 	return ast
 }
 
-func parseUnaryExpression() *UnaryExpression {
+func parseUnaryExpression() Ast {
 	tok := lookahead(1)
 	var ast Ast
 
@@ -272,9 +328,12 @@ func parseUnaryExpression() *UnaryExpression {
 		return nil
 	case tok.isTypeString(), tok.isTypeIdentifier(), tok.isTypeInt(), tok.isTypeRune():
 		ast = parsePrimaryExpression()
+		/*
 		return &UnaryExpression{
 			operand: ast,
 		}
+		*/
+		return ast
 	default:
 		putError("Unexpected token %v in parseUnaryExpression.\n", tok.sval)
 	}
@@ -292,11 +351,9 @@ func parsePrimaryExpression() Ast {
 		return &PrimaryExpression{
 			child: ast,
 		}
-	case tok.isTypeIdentifier():
+	case tok.isTypeIdentifier(), tok.isTypeReserved():
 		ast := parseIdentifierOrFuncall()
-		return &PrimaryExpression{
-			child: ast,
-		}
+		return ast
 	default:
 		putError("Unexpected token %v in parsePrimaryExpression.\n", tok.sval)
 	}
@@ -351,7 +408,7 @@ func parseIdentifier() *Identifier {
 		nextToken()
 		sym := findSymbol(tok.sval)
 		if sym == nil {
-			sym = makeSymbol(tok.sval, "int")
+			sym = makeSymbol(tok.sval)
 		}
 		return &Identifier{
 			symbol: sym,
@@ -366,6 +423,9 @@ func parseIdentifier() *Identifier {
 func parseIdentifierOrFuncall() Ast {
 	tok := lookahead(1)
 	name := tok.sval
+	if isDeclaredSymbol(name) {
+		return parseIdentifier()
+	}
 	nextToken()
 	tok = lookahead(1)
 	switch {

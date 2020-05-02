@@ -177,6 +177,7 @@ func (fd *FunctionDefinition) debug() {
  * ================================ */
 type CompoundStatement struct {
 	statements []Ast
+	localvars  []*Symbol
 }
 
 // implements Ast
@@ -229,12 +230,37 @@ func (s *Statement) show(depth int) {
 	s.ast.show(depth + 1)
 }
 
+
+/* ================================
+ * DeclarationStatement
+ *     implements Ast
+ * ================================ */
+type DeclarationStatement struct {
+	sym *Symbol
+}
+
+// implements Ast
+func (ds *DeclarationStatement) emit() {
+}
+
+// implements Ast
+func (ds *DeclarationStatement) debug() {
+	debugPrint("ast.declaration_statement")
+}
+
+// implements Ast
+func (ds *DeclarationStatement) show(depth int) {
+	printSpace(depth)
+	fmt.Printf("DeclarationStatement(%s)\n", ds.sym.name)
+}
+
+
 /* ================================
  * Assignment Expression
  *     implements Ast
  * ================================ */
 type AssignmentExpression struct {
-	left  Identifier
+	left  *Identifier
 	right Ast
 }
 
@@ -406,7 +432,7 @@ func (id *Identifier) debug() {
 // implemebts Ast
 func (id *Identifier) show(depth int) {
 	printSpace(depth)
-	fmt.Printf("Identifier")
+	fmt.Printf("Identifier(%s)\n", id.symbol.name)
 }
 
 /* ================================

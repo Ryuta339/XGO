@@ -11,7 +11,10 @@ var astMode = false
 func putError(errorMsg string, v ...interface{}) {
 	fmt.Fprintf(os.Stderr, errorMsg, v)
 	fmt.Fprintln(os.Stderr, "")
-	errorFlag = true
+// 	errorFlag = true
+	debugMode = true
+	renderTokens()
+	panic("internal error")
 }
 
 func main() {
