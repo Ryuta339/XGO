@@ -182,8 +182,19 @@ type CompoundStatement struct {
 
 // implements Ast
 func (cs *CompoundStatement) emit() {
+	stacksize := 8*len(cs.localvars)
+	if  stacksize > 0 {
+		emitCode("# allocate stack area")
+		emitCode("\tsubq\t$%d, %%rsp", stacksize)
+		frameHeight += stacksize
+	}
 	for _, statement := range cs.statements {
 		statement.emit()
+	}
+	if stacksize > 0{
+		emitCode("# free stack area")
+		emitCode("\taddq\t$%d, %%rsp", stacksize)
+		frameHeight -= stacksize
 	}
 }
 
