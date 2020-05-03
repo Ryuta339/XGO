@@ -66,6 +66,10 @@ func (tok *Token) String() string {
 		tok.typ, tok.sval, tok.filename, tok.line, tok.column)
 }
 
+func (tok *Token) isEOF() bool {
+	return tok == nil || tok.typ == "eof"
+}
+
 func (tok *Token) isPunct(s string) bool {
 	return tok != nil && tok.typ == "punct" && tok.sval == s
 }
@@ -138,7 +142,11 @@ func (ts *TokenStream) lookahead(num int) *Token {
 	if idx <= len(ts.tokens)-1 {
 		return ts.tokens[idx]
 	}
-	return nil
+	return &Token{
+		typ : "eof",
+		sval: "",
+		SourceFile: bStream.SourceFile,
+	}
 }
 
 func (ts *TokenStream) consumeToken(expected string) {
