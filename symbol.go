@@ -54,12 +54,12 @@ func (s *Symbol) emitSymbol(vType ValueType) {
 var symlist []*Symbol
 var symenv  map[string]*Symbol
 
-func makeSymbol(name string) *Symbol {
+func makeSymbol(name string, gtype string) *Symbol {
 	sym := &Symbol{
 		pos:  len(symlist) + 1,
 		name: name,
 		nSpace: &LocalVariable{
-			gtype : "int",
+			gtype : gtype,
 			offset: 8,
 		},
 	}

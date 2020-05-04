@@ -262,7 +262,7 @@ func isAlphabet(b byte) bool {
 }
 
 func isName(b byte) bool {
-	return b == '_' || isAlphabet(b)
+	return b == '_' || isAlphabet(b) || isNumber(b)
 }
 
 func readName(b byte) string {

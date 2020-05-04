@@ -13,6 +13,11 @@ type Ast interface {
 	Debuggable
 }
 
+type LeftValue interface {
+	Ast
+	emitLeft()
+}
+
 type ArithmeticOperator interface {
 	emitOperator()
 }
@@ -161,7 +166,7 @@ func (fd *FunctionDefinition) emit() {
 // implements Ast
 func (fd *FunctionDefinition) show(depth int) {
 	printSpace(depth)
-	fmt.Printf("FunctionDefinition\n")
+	fmt.Printf("FunctionDefinition(%s)\n", fd.fname)
 	fd.ast.show(depth + 1)
 }
 
@@ -247,22 +252,32 @@ func (s *Statement) show(depth int) {
  *     implements Ast
  * ================================ */
 type DeclarationStatement struct {
-	sym *Symbol
+	sym    *Symbol
+	assign Ast
 }
 
 // implements Ast
 func (ds *DeclarationStatement) emit() {
+	if ds.assign != nil {
+		ds.assign.emit()
+	}
 }
 
 // implements Ast
 func (ds *DeclarationStatement) debug() {
 	debugPrint("ast.declaration_statement")
+	if ds.assign != nil {
+		ds.assign.debug ()
+	}
 }
 
 // implements Ast
 func (ds *DeclarationStatement) show(depth int) {
 	printSpace(depth)
 	fmt.Printf("DeclarationStatement(%s)\n", ds.sym.name)
+	if ds.assign != nil {
+		ds.assign.show(depth+1)
+	}
 }
 
 
@@ -271,7 +286,7 @@ func (ds *DeclarationStatement) show(depth int) {
  *     implements Ast
  * ================================ */
 type AssignmentExpression struct {
-	left  *Identifier
+	left  LeftValue
 	right Ast
 }
 
@@ -420,12 +435,13 @@ func (ac *AstConstant) show(depth int) {
 
 /* ================================
  * Identifier
- *     implements Ast
+ *     implements Ast and LeftValue
  * ================================ */
 type Identifier struct {
 	symbol *Symbol
 }
 
+// implements LeftValue
 func (id *Identifier) emitLeft() {
 	id.symbol.emitSymbol(LEFT)
 }

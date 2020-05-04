@@ -2,7 +2,7 @@ package main
 
 import "fmt"
 
-var frameHeight int = 8
+var frameHeight int
 
 func emitCode(code string, v ...interface{}) {
 	fmt.Printf(code+"\n", v...)
@@ -19,6 +19,7 @@ func emitDataSection() {
 }
 
 func emitFuncPrologue(fname string) {
+	frameHeight = 8;
 	// これ後で修正したい
 	emitCode(".text")
 	emitCode("\t.global _%s", fname)

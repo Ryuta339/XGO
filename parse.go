@@ -189,7 +189,6 @@ func parseStatement() Ast {
 		ast = parseCompoundStatement()
 	case tok.isReserved("var"):
 		ast = parseDeclarationStatement()
-		fallthrough
 	default:
 		ast = parseExpression()
 	}
@@ -211,10 +210,30 @@ func parseDeclarationStatement() Ast {
 			putError("Expected identifier, but got %s.", tok2.sval)
 			return nil
 		}
-		sym := makeSymbol(tok2.sval)
-		// nextToken()
+		nextToken()
+
+		tok3 := lookahead(1)
+		if !tok3.isTypeIdentifier() {
+			putError("Expected type, but got %s.", tok3.sval)
+			return nil
+		}
+		sym := makeSymbol(tok2.sval, tok3.sval)
+		nextToken()
+
+		tok4 := lookahead(1)
+		if tok4.isPunct("=") {
+			id := &Identifier {
+				symbol: sym,
+			}
+			ast := parseAssignmentExpressionRightHand(id)
+			return &DeclarationStatement{
+				sym   : sym,
+				assign: ast,
+			}
+		}
 		return &DeclarationStatement{
-			sym: sym,
+			sym  : sym,
+			assign: nil,
 		}
 	default:
 		putError("Expected var, but got %s.", tok.sval)
@@ -230,6 +249,10 @@ func parseExpression() Ast {
 
 func parseAssignmentExpression() Ast {
 	var ast Ast = parseAdditiveExpression()
+	return parseAssignmentExpressionRightHand(ast)
+}
+
+func parseAssignmentExpressionRightHand(ast Ast) Ast {
 	tok := lookahead(1)
 	switch {
 	case tok.isEOF():
@@ -237,7 +260,7 @@ func parseAssignmentExpression() Ast {
 	case tok.isPunct("="):
 		consumeToken("=")
 		var right Ast = parseAdditiveExpression()
-		left, ok := ast.(*Identifier)
+		left, ok := ast.(LeftValue)
 		if !ok {
 			putError("fatal: cannot cast %T.", ast)
 			panic("internal error")
@@ -251,7 +274,7 @@ func parseAssignmentExpression() Ast {
 	default:
 		return ast
 	}
-	return nil
+	return ast
 }
 
 func parseAdditiveExpression() Ast {
@@ -406,9 +429,12 @@ func parseIdentifier() *Identifier {
 	case tok.isTypeIdentifier():
 		nextToken()
 		sym := findSymbol(tok.sval)
+		
 		if sym == nil {
-			sym = makeSymbol(tok.sval)
+			// sym = makeSymbol(tok.sval)
+			putError("Undefined variable %s.\n", tok.sval)
 		}
+		
 		return &Identifier{
 			symbol: sym,
 		}
