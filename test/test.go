@@ -20,7 +20,8 @@ func f2 () {
 
 func f3 () {
 	var j int = 5
-	printf ("%d\n", j)
+	var k int = 6
+	printf ("%d\n", j + k)
 }
 
 
