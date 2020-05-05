@@ -477,7 +477,7 @@ type FunCall struct {
 
 // implements Ast
 func (fc *FunCall) emit() {
-	var regs = []string{"rdi", "rsi"}
+	var regs = []string{"rdi", "rsi", "rdx", "rcx", "r8", "r9"}
 	for i, _ := range fc.args {
 		emitCode("\tpushq\t%%%s", regs[i])
 		frameHeight += 8
