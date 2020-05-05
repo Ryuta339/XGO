@@ -406,13 +406,7 @@ func parseConstant() Ast {
 		}
 	case tok.isTypeString():
 		nextToken()
-		ast := &AstString{
-			sval:   tok.sval,
-			slabel: fmt.Sprintf("L%d", stringIndex),
-		}
-		stringIndex++
-		stringList = append(stringList, ast)
-		return ast
+		return getAstString(tok.sval)
 	default:
 		putError("unknown token %v in parseConstant\n", tok)
 		debugToken(tok)
@@ -497,4 +491,24 @@ func parseArgumentList() []Ast {
 			debugToken(tok)
 		}
 	}
+}
+
+
+/* ================================================================ */
+
+func getAstString(sval string) *AstString {
+	for i:=0; i<stringIndex; i++ {
+		if sval==stringList[i].sval {
+			// This is probably preferable 
+			// because ast does not become a tree structure
+			return stringList[i]
+		}
+	}
+	ast := &AstString{
+		sval   : sval,
+		slabel : fmt.Sprintf("L%d", stringIndex),
+	}
+	stringIndex++
+	stringList = append(stringList, ast)
+	return ast
 }
