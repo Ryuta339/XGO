@@ -17,12 +17,12 @@ type LocalVariable struct {
 // implements NameSpace
 func (lv *LocalVariable) emitRightValue(sym *Symbol) {
 	emitCode("\tpushq\t-%d(%%rbp)", sym.pos*lv.offset)
-	frameHeight += lv.offset
+	frameHeight += 8
 }
 func (lv *LocalVariable) emitLeftValue(sym *Symbol) {
 	emitCode("\tleaq\t-%d(%%rbp), %%rax", sym.pos*lv.offset)
 	emitCode("\tpushq\t%%rax")
-	frameHeight += lv.offset
+	frameHeight += 8
 }
 
 /* ================================ */
