@@ -53,14 +53,27 @@ func (s *Symbol) emitSymbol(vType ValueType) {
 
 var symlist []*Symbol
 var symenv  map[string]*Symbol
+var localOffset int
 
 func makeSymbol(name string, gtype string) *Symbol {
+	var offset int = 8
+	switch gtype {
+	case "uint8", "int8", "byte", "bool":
+		offset = 2
+	case "uint16", "int16":
+		offset = 4
+	case "uint32", "int32", "uint", "int", "rune", "float":
+		offset = 8
+	case "uint64", "int64", "uintptr", "double":
+		offset = 16
+	}
+	localOffset += offset
 	sym := &Symbol{
 		pos:  len(symlist) + 1,
 		name: name,
 		nSpace: &LocalVariable{
 			gtype : gtype,
-			offset: 8,
+			offset: localOffset,
 		},
 	}
 	symlist = append(symlist, sym)
@@ -86,6 +99,7 @@ func isDeclaredSymbol(name string) bool {
 func beginSymbolBlock() {
 	symlist = make([]*Symbol, 0)
 	symenv = make(map[string]*Symbol)
+	localOffset = 0
 }
 
 func endSymbolBlock() []*Symbol {
