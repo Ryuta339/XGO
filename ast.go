@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"strconv"
 )
 
 /*** interface definitioins ***/
@@ -18,14 +17,6 @@ type LeftValue interface {
 	emitLeft()
 }
 
-type ArithmeticOperator interface {
-	emitOperator()
-}
-
-type Constant interface {
-	emitConstant()
-	toStringValue() string
-}
 
 /*** default functions ***/
 func printSpace(n int) {
@@ -34,76 +25,6 @@ func printSpace(n int) {
 
 func showAst(ast Ast, depth int) {
 	ast.show(depth)
-}
-
-/* ===============================
- * Arithmetic operators implementation
- * =============================== */
-type AdditiveOperator struct {
-}
-
-// implements ArithmeticOperator
-func (ao *AdditiveOperator) emitOperator() {
-	emitCode("\taddl\t%%ebx, %%eax")
-}
-
-type SubtractionOperator struct {
-}
-
-// implements ArithmeticOperator
-func (so *SubtractionOperator) emitOperator() {
-	emitCode("\tsubl\t%%ebx, %%eax")
-}
-
-type MultiplicativeOperator struct {
-}
-
-// implements ArithmeticOperator
-func (mo *MultiplicativeOperator) emitOperator() {
-	emitCode("\tpushq\t%%rdx")
-	emitCode("\timul\t%%ebx, %%eax")
-	emitCode("\tpopq\t%%rdx")
-}
-
-type DivisionOperator struct {
-}
-
-// implements AritheticOperator
-func (do *DivisionOperator) emitOperator() {
-	emitCode("\tidivl\t%%ebx, %%eax")
-}
-
-/* ===============================
- * Constants implementation
- * =============================== */
-type RuneConstant struct {
-	rval rune
-}
-
-// implements Constant
-func (rc *RuneConstant) emitConstant() {
-	emitCode("\tpushq\t$%d", rc.rval)
-	frameHeight += 8
-}
-
-// implements Costant
-func (rc *RuneConstant) toStringValue() string {
-	return string(rc.rval)
-}
-
-type IntegerConstant struct {
-	ival int
-}
-
-// implements Constant
-func (ic *IntegerConstant) emitConstant() {
-	emitCode("\tpushq\t$%d", ic.ival)
-	frameHeight += 8
-}
-
-// implements Constant
-func (ic *IntegerConstant) toStringValue() string {
-	return strconv.Itoa(ic.ival)
 }
 
 /* ================================================================ */
