@@ -65,6 +65,7 @@ func parsePackageDeclaration() string {
 	default:
 		putError("No package declaration.")
 	}
+	consumeToken(";")
 
 	return packname
 }
@@ -81,6 +82,7 @@ func parseImport() []string {
 			consumeToken("import")
 			ps := parseImportPackageNames()
 			packages = append(packages, ps...)
+			consumeToken(";")
 		default:
 			return packages
 		}
@@ -116,6 +118,7 @@ func parseImportParenthesis() []string {
 		case tok.isTypeString():
 			packages = append(packages, tok.sval)
 			nextToken()
+			consumeToken(";")
 		case tok.isPunct(")"):
 			consumeToken(")")
 			return packages
@@ -152,6 +155,7 @@ func parseFunctionDefinition() Ast {
 		}
 	}
 	ast := parseCompoundStatement()
+	consumeToken(";")
 	return &FunctionDefinition{
 		fname: tok.sval,
 		ast:   ast,
@@ -192,6 +196,7 @@ func parseStatement() Ast {
 	default:
 		ast = parseExpression()
 	}
+	consumeToken(";")
 
 	return &Statement{
 		ast: ast,
@@ -269,6 +274,8 @@ func parseAssignmentExpressionRightHand(ast Ast) Ast {
 			left : left,
 			right: right,
 		}
+	case tok.isSemicolon():
+		return ast
 	case tok.isPunct(")"), tok.isPunct("}"):
 		return ast
 	default:
@@ -300,6 +307,8 @@ func parseAdditiveExpression() Ast {
 				left:     ast,
 				right:    right,
 			}
+		case tok.isSemicolon():
+			return ast
 		case tok.isPunct("="):
 			return ast
 		default:
@@ -332,6 +341,8 @@ func parseMultiplicativeExpression() Ast {
 				left:     ast,
 				right:    right,
 			}
+		case tok.isSemicolon():
+			return ast
 		case tok.isPunct("+"), tok.isPunct("-"), tok.isPunct("="):
 			return ast
 		default:

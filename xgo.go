@@ -9,8 +9,9 @@ var errorFlag = false
 var astMode = false
 
 func putError(errorMsg string, v ...interface{}) {
-	fmt.Fprintf(os.Stderr, errorMsg, v)
-	fmt.Fprintln(os.Stderr, "")
+	fmt.Fprintf(os.Stderr, "\x1b[31m")
+	fmt.Fprintf(os.Stderr, errorMsg, v...)
+	fmt.Fprintf(os.Stderr, "\x1b[39m\n")
 // 	errorFlag = true
 	debugMode = true
 	renderTokens()

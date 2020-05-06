@@ -110,6 +110,10 @@ func (tok *Token) isTypeRune() bool {
 	return tok != nil && tok.typ == "rune"
 }
 
+func (tok *Token) isSemicolon() bool {
+	return tok.isPunct(";")
+}
+
 func newToken(typ string, sval string) *Token {
 	return &Token{
 		typ:  typ,
@@ -120,6 +124,18 @@ func newToken(typ string, sval string) *Token {
 			column:   bStream.column,
 		},
 	}
+}
+
+var semicolon = &Token{
+	typ : "punct",
+	sval: ";",
+}
+
+func autoSemicolonInsert(last *Token) bool {
+	return last.isTypeIdentifier() ||
+		   last.isTypeInt() || last.isTypeRune() || last.isTypeString() ||
+		   last.isReserved("break") || last.isReserved("continue") || last.isReserved("fallthrough") || last.isReserved("return") ||
+		   last.isPunct("++") || last.isPunct("--") || last.isPunct(")") || last.isPunct("]") || last.isPunct("}")
 }
 
 /* ================================
@@ -165,11 +181,11 @@ func (ts *TokenStream) consumeToken(expected string) {
 func (ts *TokenStream) debug() {
 	for idx, tok := range ts.tokens {
 		if idx==ts.index {
-			debugPrint("=== now parsing ===")
+			debugPrint("\x1b[31m======== now parsing ========\x1b[39m")
 		}
 		debugToken(tok)
 		if idx==ts.index {
-			debugPrint("=== now parsing ===")
+			debugPrint("\x1b[31m======== now parsing ========\x1b[39m")
 		}
 	}
 }
@@ -238,23 +254,35 @@ func readNumber(b byte) string {
 	}
 }
 
-func isSpace(b byte) bool {
-	return b == ' ' || b == '\t' || b == '\n' || b == '\r'
-}
-
-func skipSpace() {
+func skip(isFunc func(byte)bool) {
 	for {
 		c, err := bStream.getc()
 		if err != nil {
 			return
 		}
-		if isSpace(c) {
+		if isFunc(c) {
 			continue
 		} else {
 			bStream.ungetc()
 			return
 		}
 	}
+}
+
+func isSpace(b byte) bool {
+	return b == ' ' || b == '\t'
+}
+
+func skipSpace() {
+	skip(isSpace)
+}
+
+func isNewLine(b byte) bool {
+	return b == '\n' || b == '\r'
+}
+
+func skipNewLine() {
+	skip(isNewLine)
 }
 
 func isAlphabet(b byte) bool {
@@ -377,10 +405,19 @@ func tokenize(filename string) {
 		case c == '"':
 			sval := readString()
 			tok = &Token{typ: "string", sval: sval}
-		case c == ' ' || c == '\t' || c == '\n' || c == '\r':
+		case c == ' ' || c == '\t':
 			skipSpace()
 			continue
-			// tok = &Token {typ: "space", sval: " "}
+		case c == '\r' || c=='\n':
+			// insert semicolon
+			if len(r) > 0 {
+				last := r[len(r)-1]
+				if autoSemicolonInsert(last) {
+					r = append(r, semicolon)
+				}
+			}
+			skipNewLine()
+			continue
 		case isPunctuation(c):
 			tok = &Token{typ: "punct", sval: fmt.Sprintf("%c", c)}
 		case c == '=':
