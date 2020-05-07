@@ -34,6 +34,9 @@ func parseTranslationUnit() Ast {
 		case tok.isReserved("func"):
 			ast := parseFunctionDefinition()
 			childs = append(childs, ast)
+		case tok.isReserved("var"):
+			ast := parseDeclarationStatement()
+			childs = append(childs, ast)
 		default:
 			putError("func expected, but got %v.", tok.sval)
 		}
@@ -155,7 +158,6 @@ func parseFunctionDefinition() Ast {
 		}
 	}
 	ast := parseCompoundStatement()
-	consumeToken(";")
 	return &FunctionDefinition{
 		fname: tok.sval,
 		ast:   ast,
@@ -171,6 +173,7 @@ func parseCompoundStatement() Ast {
 		switch {
 		case tok.isPunct("}"):
 			consumeToken("}")
+			consumeToken(";")
 			localvars := endSymbolBlock()
 			return &CompoundStatement{
 				statements: statements,
@@ -195,8 +198,8 @@ func parseStatement() Ast {
 		ast = parseDeclarationStatement()
 	default:
 		ast = parseExpression()
+		consumeToken(";")
 	}
-	consumeToken(";")
 
 	return &Statement{
 		ast: ast,
@@ -231,11 +234,13 @@ func parseDeclarationStatement() Ast {
 				symbol: sym,
 			}
 			ast := parseAssignmentExpressionRightHand(id)
+			consumeToken(";")
 			return &DeclarationStatement{
 				sym   : sym,
 				assign: ast,
 			}
 		}
+		consumeToken(";")
 		return &DeclarationStatement{
 			sym  : sym,
 			assign: nil,

@@ -31,6 +31,22 @@ func (lv *LocalVariable) emitLeftValue(sym *Symbol) {
 	frameHeight += 8
 }
 
+/* ================================
+ * GlobalVariable
+ *     implements NameSpace 
+ * ================================ */
+type GlobalVariable struct {
+	gtype string
+}
+
+// implements NameSpace
+func (gv *GlobalVariable) emitRightValue(sym *Symbol) {
+}
+// implements NameSpace
+func (gv *GlobalVariable) emitLeftValue(sym *Symbol) {
+}
+
+
 
 /* ================================ */
 
@@ -58,12 +74,18 @@ func (s *Symbol) emitSymbol(vType ValueType) {
 	}
 }
 
-var symlist []*Symbol
-var symenv  map[string]*Symbol
-var localOffset int
+var symbolDepth int = 0
+
+var globalsymlist []*Symbol          = make([]*Symbol,0)
+var globalsymenv  map[string]*Symbol = make(map[string]*Symbol)
+
+var localsymlist []*Symbol
+var localsymenv  map[string]*Symbol
+var localsymOffset int
 
 func makeSymbol(name string, gtype string) *Symbol {
 	var offset int = 8
+	var sym *Symbol
 	switch gtype {
 	case "uint8", "int8", "byte", "bool":
 		offset = 2
@@ -74,23 +96,41 @@ func makeSymbol(name string, gtype string) *Symbol {
 	case "uint64", "int64", "uintptr", "double":
 		offset = 16
 	}
-	// localOffset += offset
-	sym := &Symbol{
-		pos:  len(symlist) + 1,
-		name: name,
-		nSpace: &LocalVariable{
-			gtype : gtype,
-			offset: localOffset,
-		},
+	if symbolDepth == 0 {
+		// global variable
+		sym = &Symbol{
+			pos:    len(globalsymlist) + 1,
+			name:   name,
+			nSpace:&GlobalVariable{
+				gtype : gtype,
+			},
+		}
+		globalsymlist = append(globalsymlist, sym)
+		globalsymenv[name] = sym
+	} else {
+		// local variable
+		sym = &Symbol{
+			pos:    len(localsymlist) + 1,
+			name:   name,
+			nSpace: &LocalVariable{
+				gtype : gtype,
+				offset: localsymOffset,
+			},
+		}
+		localsymOffset += offset
+		localsymlist = append(localsymlist, sym)
+		localsymenv[name] = sym
 	}
-	localOffset += offset
-	symlist = append(symlist, sym)
-	symenv[name] = sym
 	return sym
 }
 
 func findSymbol(name string) *Symbol {
-	for _, sym := range symlist {
+	for _, sym := range localsymlist {
+		if sym.name == name {
+			return sym
+		}
+	}
+	for _, sym := range globalsymlist {
 		if sym.name == name {
 			return sym
 		}
@@ -100,18 +140,25 @@ func findSymbol(name string) *Symbol {
 }
 
 func isDeclaredSymbol(name string) bool {
-	_, ok := symenv[name]
-	return ok
+	_, okL := localsymenv[name]
+	_, okG := globalsymenv[name]
+	return okL || okG
 }
 
 func beginSymbolBlock() {
-	symlist = make([]*Symbol, 0)
-	symenv = make(map[string]*Symbol)
-	localOffset = 8
+	localsymlist = make([]*Symbol, 0)
+	localsymenv = make(map[string]*Symbol)
+	localsymOffset = 8
+	symbolDepth++
 }
 
 func endSymbolBlock() []*Symbol {
-	tmp := symlist
-	symlist = nil
+	if symbolDepth == 0 {
+		putError ("global")
+		return globalsymlist
+	}
+	symbolDepth--
+	tmp := localsymlist
+	localsymlist = nil
 	return tmp
 }
