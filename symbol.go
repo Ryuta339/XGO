@@ -9,6 +9,11 @@ type NameSpace interface {
 	emitRightValue(sym *Symbol)
 }
 
+
+/* ================================
+ * LocalVariable
+ *     implements NameSpace 
+ * ================================ */
 type LocalVariable struct {
 	gtype  string
 	offset int
@@ -19,11 +24,13 @@ func (lv *LocalVariable) emitRightValue(sym *Symbol) {
 	emitCode("\tpushq\t-%d(%%rbp)", sym.pos*lv.offset)
 	frameHeight += 8
 }
+// implements NameSpace
 func (lv *LocalVariable) emitLeftValue(sym *Symbol) {
 	emitCode("\tleaq\t-%d(%%rbp), %%rax", sym.pos*lv.offset)
 	emitCode("\tpushq\t%%rax")
 	frameHeight += 8
 }
+
 
 /* ================================ */
 
@@ -67,7 +74,7 @@ func makeSymbol(name string, gtype string) *Symbol {
 	case "uint64", "int64", "uintptr", "double":
 		offset = 16
 	}
-	localOffset += offset
+	// localOffset += offset
 	sym := &Symbol{
 		pos:  len(symlist) + 1,
 		name: name,
@@ -76,6 +83,7 @@ func makeSymbol(name string, gtype string) *Symbol {
 			offset: localOffset,
 		},
 	}
+	localOffset += offset
 	symlist = append(symlist, sym)
 	symenv[name] = sym
 	return sym
@@ -99,7 +107,7 @@ func isDeclaredSymbol(name string) bool {
 func beginSymbolBlock() {
 	symlist = make([]*Symbol, 0)
 	symenv = make(map[string]*Symbol)
-	localOffset = 0
+	localOffset = 8
 }
 
 func endSymbolBlock() []*Symbol {
