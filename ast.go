@@ -34,13 +34,19 @@ func showAst(ast Ast, depth int) {
  *     implements Ast and Debuggale
  * ================================ */
 type TranslationUnit struct {
-	packname string
-	packages []string
-	childs   []Ast
+	packname   string
+	packages   []string
+	childs     []Ast
+	globalvars []*Symbol
 }
 
 // implements Ast
 func (tu *TranslationUnit) emit() {
+	for _, sym := range tu.globalvars {
+		emitCode(".global\t_%s", sym.name)
+		emitCode("_%s:", sym.name)
+		emitCode(".long\t%s", sym.nSpace.(*GlobalVariable).initval.toStringValue())
+	}
 	for _, child := range tu.childs {
 		child.emit()
 	}
@@ -66,6 +72,33 @@ func (tu *TranslationUnit) debug() {
 		child.debug()
 	}
 }
+
+/* ================================
+ * GlobalDeclaration
+ *     implements Ast
+ * ================================
+type GlobalDeclaration struct {
+	sym   *Symbol
+}
+
+// implements Ast
+func (gd *GlobalDeclaration) emit() {
+	emitCode(".global %s", gd.sym.name)
+	emitCode("%s:", gd.sym.name)
+	emitCode(".long %s", gd.sym.nSpace.(*GlobalVariable).initval.toStringValue())
+}
+
+// implements Ast
+func (gd *GlobalDeclaration) show(depth int) {
+	printSpace(depth)
+	fmt.Printf("GlobalDeclaration(%s=%s)\n", gd.sym.name, gd.sym.nSpace.(*GlobalVariable).initval.toStringValue())
+}
+
+// implements Ast
+func (gd *GlobalDeclaration) debug() {
+	debugPrint("ast.global_declaration")
+}
+*/
 
 /* ================================
  * Function Definition

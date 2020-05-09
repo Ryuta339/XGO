@@ -26,7 +26,7 @@ func f3 () {
 }
 
 
-var gi int = 1
+var gi int = 30200
 
 func f4 () {
 	printf ("%d\n", gi)

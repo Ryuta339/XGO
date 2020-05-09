@@ -1,14 +1,15 @@
 CC		= go build
+BIN		= out
 
 
 xgo: *.go
 	$(CC) -o $@ $^
 
-out/tmp.s: xgo test/test.go
-	./xgo test/test > $@
+tmp.s: xgo test/test.go
+	./xgo test/test > $(BIN)/$@
 
-out/tmp.out: out/tmp.s
-	gcc -o $@ $^
+tmp.out: $(BIN)/tmp.s
+	gcc -o $(BIN)/$@ $^
 
 
 .PHONY: clean

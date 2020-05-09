@@ -27,25 +27,25 @@ func parseTranslationUnit() Ast {
 		switch {
 		case tok.isEOF():
 			return &TranslationUnit{
-				packname: packname,
-				packages: packages,
-				childs:   childs,
+				packname:   packname,
+				packages:   packages,
+				childs:     childs,
+				globalvars: globalsymlist,
 			}
 		case tok.isReserved("func"):
 			ast := parseFunctionDefinition()
 			childs = append(childs, ast)
 		case tok.isReserved("var"):
-			ast := parseDeclarationStatement()
-			childs = append(childs, ast)
+			parseGlobalDeclaration()
 		default:
 			putError("func expected, but got %v.", tok.sval)
 		}
 	}
-
 	return &TranslationUnit{
-		packname: packname,
-		packages: packages,
-		childs:   childs,
+		packname:   packname,
+		packages:   packages,
+		childs:     childs,
+		globalvars: globalsymlist,
 	}
 }
 
@@ -131,6 +131,64 @@ func parseImportParenthesis() []string {
 		}
 	}
 }
+
+func parseGlobalDeclaration() {
+	tok := lookahead(1)
+	switch {
+	case tok.isEOF():
+		return
+	case tok.isReserved("var"):
+		consumeToken("var")
+		tok2 := lookahead(1)
+		if !tok2.isTypeIdentifier() {
+			putError("Expected identifier, but got %s.", tok2.sval)
+			return
+		}
+		nextToken()
+
+		tok3 := lookahead(1)
+		if !tok3.isTypeIdentifier() {
+			putError("Expected type, but got %s.", tok3.sval)
+			return
+		}
+		sym := makeSymbol(tok2.sval, tok3.sval)
+		nextToken()
+
+		tok4 := lookahead(1)
+		
+		initstr := "0"
+		if tok4.isPunct("=") {
+			consumeToken ("=")
+			tok5 := lookahead(1)
+			initstr = tok5.sval
+			nextToken()
+		}
+		consumeToken(";")
+
+		var initval Constant
+		switch sym.gtype {
+		case "int":
+			ival, _ := strconv.Atoi(initstr)
+			initval =& IntegerConstant{
+				ival: ival,
+			}
+		default:
+			putError("Acceptable global variable is int, but got %s", sym.gtype)
+		}
+		sym.nSpace.(*GlobalVariable).initval = initval
+
+		/*
+		return &GlobalDeclaration{
+			sym  : sym,
+		}
+		*/
+	default:
+		putError("Expected var, but got %s.", tok.sval)
+		return
+	}
+}
+
+
 
 func parseFunctionDefinition() Ast {
 	tok := lookahead(1)

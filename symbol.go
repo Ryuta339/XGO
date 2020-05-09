@@ -15,7 +15,6 @@ type NameSpace interface {
  *     implements NameSpace 
  * ================================ */
 type LocalVariable struct {
-	gtype  string
 	offset int
 }
 
@@ -36,14 +35,16 @@ func (lv *LocalVariable) emitLeftValue(sym *Symbol) {
  *     implements NameSpace 
  * ================================ */
 type GlobalVariable struct {
-	gtype string
+	initval Constant
 }
 
 // implements NameSpace
 func (gv *GlobalVariable) emitRightValue(sym *Symbol) {
+	emitCode("\tpushq\t_%s(%%rip)", sym.name)
 }
 // implements NameSpace
 func (gv *GlobalVariable) emitLeftValue(sym *Symbol) {
+	emitCode("\tpushq\t_%s(%%rip)", sym.name)
 }
 
 
@@ -60,6 +61,7 @@ const (
 type Symbol struct {
 	pos    int
 	name   string
+	gtype   string
 	nSpace NameSpace
 }
 
@@ -101,8 +103,8 @@ func makeSymbol(name string, gtype string) *Symbol {
 		sym = &Symbol{
 			pos:    len(globalsymlist) + 1,
 			name:   name,
+			gtype : gtype,
 			nSpace:&GlobalVariable{
-				gtype : gtype,
 			},
 		}
 		globalsymlist = append(globalsymlist, sym)
@@ -112,8 +114,8 @@ func makeSymbol(name string, gtype string) *Symbol {
 		sym = &Symbol{
 			pos:    len(localsymlist) + 1,
 			name:   name,
+			gtype : gtype,
 			nSpace: &LocalVariable{
-				gtype : gtype,
 				offset: localsymOffset,
 			},
 		}
@@ -135,8 +137,8 @@ func findSymbol(name string) *Symbol {
 			return sym
 		}
 	}
-	fmt.Println("Undefined symbol %s.\n", name)
-	panic("internal error")
+	putError("Undefined symbol %s.\n", name)
+	return nil
 }
 
 func isDeclaredSymbol(name string) bool {
@@ -154,7 +156,6 @@ func beginSymbolBlock() {
 
 func endSymbolBlock() []*Symbol {
 	if symbolDepth == 0 {
-		putError ("global")
 		return globalsymlist
 	}
 	symbolDepth--
