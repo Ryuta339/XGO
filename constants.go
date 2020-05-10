@@ -4,13 +4,11 @@ import (
 	"strconv"
 )
 
-
 /*** interface definitioins ***/
 type Constant interface {
 	emitConstant()
 	toStringValue() string
 }
-
 
 /* ===============================
  * Constants implementation

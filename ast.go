@@ -17,7 +17,6 @@ type LeftValue interface {
 	emitLeft()
 }
 
-
 /*** default functions ***/
 func printSpace(n int) {
 	fmt.Printf("%*s", n, "")
@@ -154,7 +153,7 @@ func (cs *CompoundStatement) emit() {
 	for _, statement := range cs.statements {
 		statement.emit()
 	}
-	if stacksize > 0{
+	if stacksize > 0 {
 		emitCode("# free stack area")
 		emitCode("\taddq\t$%d, %%rsp", stacksize)
 		frameHeight -= stacksize
@@ -204,7 +203,6 @@ func (s *Statement) show(depth int) {
 	s.ast.show(depth + 1)
 }
 
-
 /* ================================
  * DeclarationStatement
  *     implements Ast
@@ -225,7 +223,7 @@ func (ds *DeclarationStatement) emit() {
 func (ds *DeclarationStatement) debug() {
 	debugPrint("ast.declaration_statement")
 	if ds.assign != nil {
-		ds.assign.debug ()
+		ds.assign.debug()
 	}
 }
 
@@ -234,10 +232,9 @@ func (ds *DeclarationStatement) show(depth int) {
 	printSpace(depth)
 	fmt.Printf("DeclarationStatement(%s)\n", ds.sym.name)
 	if ds.assign != nil {
-		ds.assign.show(depth+1)
+		ds.assign.show(depth + 1)
 	}
 }
-
 
 /* ================================
  * Assignment Expression

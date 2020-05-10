@@ -127,15 +127,15 @@ func newToken(typ string, sval string) *Token {
 }
 
 var semicolon = &Token{
-	typ : "punct",
+	typ:  "punct",
 	sval: ";",
 }
 
 func autoSemicolonInsert(last *Token) bool {
 	return last.isTypeIdentifier() ||
-		   last.isTypeInt() || last.isTypeRune() || last.isTypeString() ||
-		   last.isReserved("break") || last.isReserved("continue") || last.isReserved("fallthrough") || last.isReserved("return") ||
-		   last.isPunct("++") || last.isPunct("--") || last.isPunct(")") || last.isPunct("]") || last.isPunct("}")
+		last.isTypeInt() || last.isTypeRune() || last.isTypeString() ||
+		last.isReserved("break") || last.isReserved("continue") || last.isReserved("fallthrough") || last.isReserved("return") ||
+		last.isPunct("++") || last.isPunct("--") || last.isPunct(")") || last.isPunct("]") || last.isPunct("}")
 }
 
 /* ================================
@@ -159,8 +159,8 @@ func (ts *TokenStream) lookahead(num int) *Token {
 		return ts.tokens[idx]
 	}
 	return &Token{
-		typ : "eof",
-		sval: "",
+		typ:        "eof",
+		sval:       "",
 		SourceFile: bStream.SourceFile,
 	}
 }
@@ -180,11 +180,11 @@ func (ts *TokenStream) consumeToken(expected string) {
 // implements Debuggable
 func (ts *TokenStream) debug() {
 	for idx, tok := range ts.tokens {
-		if idx==ts.index {
+		if idx == ts.index {
 			debugPrint("\x1b[31m======== now parsing ========\x1b[39m")
 		}
 		debugToken(tok)
-		if idx==ts.index {
+		if idx == ts.index {
 			debugPrint("\x1b[31m======== now parsing ========\x1b[39m")
 		}
 	}
@@ -254,7 +254,7 @@ func readNumber(b byte) string {
 	}
 }
 
-func skip(isFunc func(byte)bool) {
+func skip(isFunc func(byte) bool) {
 	for {
 		c, err := bStream.getc()
 		if err != nil {
@@ -408,7 +408,7 @@ func tokenize(filename string) {
 		case c == ' ' || c == '\t':
 			skipSpace()
 			continue
-		case c == '\r' || c=='\n':
+		case c == '\r' || c == '\n':
 			// insert semicolon
 			if len(r) > 0 {
 				last := r[len(r)-1]

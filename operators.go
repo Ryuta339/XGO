@@ -5,7 +5,6 @@ type ArithmeticOperator interface {
 	emitOperator()
 }
 
-
 /* ===============================
  * Arithmetic operators implementation
  * =============================== */

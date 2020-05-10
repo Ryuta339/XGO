@@ -12,7 +12,7 @@ func putError(errorMsg string, v ...interface{}) {
 	fmt.Fprintf(os.Stderr, "\x1b[31m")
 	fmt.Fprintf(os.Stderr, errorMsg, v...)
 	fmt.Fprintf(os.Stderr, "\x1b[39m\n")
-// 	errorFlag = true
+	// 	errorFlag = true
 	debugMode = true
 	renderTokens()
 	panic("internal error")
@@ -42,11 +42,11 @@ func main() {
 		panic("internal error")
 	}
 	/*
-	if debugMode {
-		debugPrint("==== Start Dump Ast ====")
-		debugAst(ast)
-		debugPrint("==== End Dump Ast ====")
-	}
+		if debugMode {
+			debugPrint("==== Start Dump Ast ====")
+			debugAst(ast)
+			debugPrint("==== End Dump Ast ====")
+		}
 	*/
 	if astMode {
 		showAst(ast, 0)

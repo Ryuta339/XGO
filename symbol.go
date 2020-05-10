@@ -9,10 +9,9 @@ type NameSpace interface {
 	emitRightValue(sym *Symbol)
 }
 
-
 /* ================================
  * LocalVariable
- *     implements NameSpace 
+ *     implements NameSpace
  * ================================ */
 type LocalVariable struct {
 	offset int
@@ -23,6 +22,7 @@ func (lv *LocalVariable) emitRightValue(sym *Symbol) {
 	emitCode("\tpushq\t-%d(%%rbp)", sym.pos*lv.offset)
 	frameHeight += 8
 }
+
 // implements NameSpace
 func (lv *LocalVariable) emitLeftValue(sym *Symbol) {
 	emitCode("\tleaq\t-%d(%%rbp), %%rax", sym.pos*lv.offset)
@@ -32,7 +32,7 @@ func (lv *LocalVariable) emitLeftValue(sym *Symbol) {
 
 /* ================================
  * GlobalVariable
- *     implements NameSpace 
+ *     implements NameSpace
  * ================================ */
 type GlobalVariable struct {
 	initval Constant
@@ -42,12 +42,12 @@ type GlobalVariable struct {
 func (gv *GlobalVariable) emitRightValue(sym *Symbol) {
 	emitCode("\tpushq\t_%s(%%rip)", sym.name)
 }
+
 // implements NameSpace
 func (gv *GlobalVariable) emitLeftValue(sym *Symbol) {
+	// Global Offset Table
 	emitCode("\tpushq\t_%s@GOTPCREL(%%rip)", sym.name)
 }
-
-
 
 /* ================================ */
 
@@ -61,7 +61,7 @@ const (
 type Symbol struct {
 	pos    int
 	name   string
-	gtype   string
+	gtype  string
 	nSpace NameSpace
 }
 
@@ -78,11 +78,11 @@ func (s *Symbol) emitSymbol(vType ValueType) {
 
 var symbolDepth int = 0
 
-var globalsymlist []*Symbol          = make([]*Symbol,0)
-var globalsymenv  map[string]*Symbol = make(map[string]*Symbol)
+var globalsymlist []*Symbol = make([]*Symbol, 0)
+var globalsymenv map[string]*Symbol = make(map[string]*Symbol)
 
 var localsymlist []*Symbol
-var localsymenv  map[string]*Symbol
+var localsymenv map[string]*Symbol
 var localsymOffset int
 
 func makeSymbol(name string, gtype string) *Symbol {
@@ -103,18 +103,17 @@ func makeSymbol(name string, gtype string) *Symbol {
 		sym = &Symbol{
 			pos:    len(globalsymlist) + 1,
 			name:   name,
-			gtype : gtype,
-			nSpace:&GlobalVariable{
-			},
+			gtype:  gtype,
+			nSpace: &GlobalVariable{},
 		}
 		globalsymlist = append(globalsymlist, sym)
 		globalsymenv[name] = sym
 	} else {
 		// local variable
 		sym = &Symbol{
-			pos:    len(localsymlist) + 1,
-			name:   name,
-			gtype : gtype,
+			pos:   len(localsymlist) + 1,
+			name:  name,
+			gtype: gtype,
 			nSpace: &LocalVariable{
 				offset: localsymOffset,
 			},

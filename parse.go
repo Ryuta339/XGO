@@ -135,10 +135,10 @@ func parseImportParenthesis() []string {
 func parseGlobalDeclaration() {
 	sym := parseDeclarationStatementCommon()
 	tok := lookahead(1)
-	
+
 	initstr := "0"
 	if tok.isPunct("=") {
-		consumeToken ("=")
+		consumeToken("=")
 		tok2 := lookahead(1)
 		initstr = tok2.sval
 		nextToken()
@@ -149,22 +149,14 @@ func parseGlobalDeclaration() {
 	switch sym.gtype {
 	case "int":
 		ival, _ := strconv.Atoi(initstr)
-		initval =& IntegerConstant{
+		initval = &IntegerConstant{
 			ival: ival,
 		}
 	default:
 		putError("Acceptable global variable is int, but got %s", sym.gtype)
 	}
 	sym.nSpace.(*GlobalVariable).initval = initval
-
-	/*
-	return &GlobalDeclaration{
-		sym  : sym,
-	}
-	*/
 }
-
-
 
 func parseFunctionDefinition() Ast {
 	tok := lookahead(1)
@@ -211,7 +203,7 @@ func parseCompoundStatement() Ast {
 			localvars := endSymbolBlock()
 			return &CompoundStatement{
 				statements: statements,
-				localvars : localvars,
+				localvars:  localvars,
 			}
 		default:
 			var ast Ast = parseStatement()
@@ -274,19 +266,19 @@ func parseDeclarationStatement() Ast {
 	sym := parseDeclarationStatementCommon()
 	tok := lookahead(1)
 	if tok.isPunct("=") {
-		id := &Identifier {
+		id := &Identifier{
 			symbol: sym,
 		}
 		ast := parseAssignmentExpressionRightHand(id)
 		consumeToken(";")
 		return &DeclarationStatement{
-			sym   : sym,
+			sym:    sym,
 			assign: ast,
 		}
 	}
 	consumeToken(";")
 	return &DeclarationStatement{
-		sym  : sym,
+		sym:    sym,
 		assign: nil,
 	}
 }
@@ -314,8 +306,8 @@ func parseAssignmentExpressionRightHand(ast Ast) Ast {
 			putError("fatal: cannot cast %T.", ast)
 			panic("internal error")
 		}
-		return &AssignmentExpression {
-			left : left,
+		return &AssignmentExpression{
+			left:  left,
 			right: right,
 		}
 	case tok.isSemicolon():
@@ -406,9 +398,9 @@ func parseUnaryExpression() Ast {
 	case tok.isTypeString(), tok.isTypeIdentifier(), tok.isTypeInt(), tok.isTypeRune():
 		ast = parsePrimaryExpression()
 		/*
-		return &UnaryExpression{
-			operand: ast,
-		}
+			return &UnaryExpression{
+				operand: ast,
+			}
 		*/
 		return ast
 	default:
@@ -478,12 +470,12 @@ func parseIdentifier() *Identifier {
 	case tok.isTypeIdentifier():
 		nextToken()
 		sym := findSymbol(tok.sval)
-		
+
 		if sym == nil {
 			// sym = makeSymbol(tok.sval)
 			putError("Undefined variable %s.\n", tok.sval)
 		}
-		
+
 		return &Identifier{
 			symbol: sym,
 		}
@@ -548,20 +540,19 @@ func parseArgumentList() []Ast {
 	}
 }
 
-
 /* ================================================================ */
 
 func getAstString(sval string) *AstString {
-	for i:=0; i<stringIndex; i++ {
-		if sval==stringList[i].sval {
-			// This is probably preferable 
+	for i := 0; i < stringIndex; i++ {
+		if sval == stringList[i].sval {
+			// This is probably preferable
 			// because ast does not become a tree structure
 			return stringList[i]
 		}
 	}
 	ast := &AstString{
-		sval   : sval,
-		slabel : fmt.Sprintf("L%d", stringIndex),
+		sval:   sval,
+		slabel: fmt.Sprintf("L%d", stringIndex),
 	}
 	stringIndex++
 	stringList = append(stringList, ast)
