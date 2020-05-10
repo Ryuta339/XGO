@@ -133,7 +133,7 @@ func parseImportParenthesis() []string {
 }
 
 func parseGlobalDeclaration() {
-	sym := parseDeclarationStatementCommon()
+	sym := parseDeclarationStatementCommon().(*GlobalVariable)
 	tok := lookahead(1)
 
 	initstr := "0"
@@ -155,7 +155,7 @@ func parseGlobalDeclaration() {
 	default:
 		putError("Acceptable global variable is int, but got %s", sym.gtype)
 	}
-	sym.nSpace.(*GlobalVariable).initval = initval
+	sym.initval = initval
 }
 
 func parseFunctionDefinition() Ast {
@@ -232,7 +232,7 @@ func parseStatement() Ast {
 	}
 }
 
-func parseDeclarationStatementCommon() *Symbol {
+func parseDeclarationStatementCommon() Symbol {
 
 	tok := lookahead(1)
 	switch {
@@ -263,7 +263,7 @@ func parseDeclarationStatementCommon() *Symbol {
 }
 
 func parseDeclarationStatement() Ast {
-	sym := parseDeclarationStatementCommon()
+	sym := parseDeclarationStatementCommon().(*LocalVariable)
 	tok := lookahead(1)
 	if tok.isPunct("=") {
 		id := &Identifier{

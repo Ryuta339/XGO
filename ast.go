@@ -36,7 +36,7 @@ type TranslationUnit struct {
 	packname   string
 	packages   []string
 	childs     []Ast
-	globalvars []*Symbol
+	globalvars []*GlobalVariable
 }
 
 // implements Ast
@@ -44,7 +44,7 @@ func (tu *TranslationUnit) emit() {
 	for _, sym := range tu.globalvars {
 		emitCode(".global\t_%s", sym.name)
 		emitCode("_%s:", sym.name)
-		emitCode(".long\t%s", sym.nSpace.(*GlobalVariable).initval.toStringValue())
+		emitCode(".long\t%s", sym.initval.toStringValue())
 	}
 	for _, child := range tu.childs {
 		child.emit()
@@ -77,7 +77,7 @@ func (tu *TranslationUnit) debug() {
  *     implements Ast
  * ================================
 type GlobalDeclaration struct {
-	sym   *Symbol
+	sym   *GlobalVariable
 }
 
 // implements Ast
@@ -135,7 +135,7 @@ func (fd *FunctionDefinition) debug() {
  * ================================ */
 type CompoundStatement struct {
 	statements []Ast
-	localvars  []*Symbol
+	localvars  []*LocalVariable
 }
 
 // implements Ast
@@ -143,7 +143,7 @@ func (cs *CompoundStatement) emit() {
 	var stacksize int = 0
 	for _, v := range cs.localvars {
 		// よくない
-		stacksize += v.nSpace.(*LocalVariable).offset
+		stacksize += v.offset
 	}
 	if stacksize > 0 {
 		emitCode("# allocate stack area")
@@ -208,7 +208,7 @@ func (s *Statement) show(depth int) {
  *     implements Ast
  * ================================ */
 type DeclarationStatement struct {
-	sym    *Symbol
+	sym    *LocalVariable
 	assign Ast
 }
 
@@ -393,28 +393,28 @@ func (ac *AstConstant) show(depth int) {
  *     implements Ast and LeftValue
  * ================================ */
 type Identifier struct {
-	symbol *Symbol
+	symbol Symbol
 }
 
 // implements LeftValue
 func (id *Identifier) emitLeft() {
-	id.symbol.emitSymbol(LEFT)
+	id.symbol.emitLeftValue()
 }
 
 // implements Ast
 func (id *Identifier) emit() {
-	id.symbol.emitSymbol(RIGHT)
+	id.symbol.emitRightValue()
 }
 
 // implements Ast
 func (id *Identifier) debug() {
-	debugPrintWithVariable("ast.identifier", id.symbol.name)
+	debugPrintWithVariable("ast.identifier", id.symbol.getName())
 }
 
 // implemebts Ast
 func (id *Identifier) show(depth int) {
 	printSpace(depth)
-	fmt.Printf("Identifier(%s)\n", id.symbol.name)
+	fmt.Printf("Identifier(%s)\n", id.symbol.getName())
 }
 
 /* ================================
