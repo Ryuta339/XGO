@@ -133,59 +133,35 @@ func parseImportParenthesis() []string {
 }
 
 func parseGlobalDeclaration() {
+	sym := parseDeclarationStatementCommon()
 	tok := lookahead(1)
-	switch {
-	case tok.isEOF():
-		return
-	case tok.isReserved("var"):
-		consumeToken("var")
+	
+	initstr := "0"
+	if tok.isPunct("=") {
+		consumeToken ("=")
 		tok2 := lookahead(1)
-		if !tok2.isTypeIdentifier() {
-			putError("Expected identifier, but got %s.", tok2.sval)
-			return
-		}
+		initstr = tok2.sval
 		nextToken()
-
-		tok3 := lookahead(1)
-		if !tok3.isTypeIdentifier() {
-			putError("Expected type, but got %s.", tok3.sval)
-			return
-		}
-		sym := makeSymbol(tok2.sval, tok3.sval)
-		nextToken()
-
-		tok4 := lookahead(1)
-		
-		initstr := "0"
-		if tok4.isPunct("=") {
-			consumeToken ("=")
-			tok5 := lookahead(1)
-			initstr = tok5.sval
-			nextToken()
-		}
-		consumeToken(";")
-
-		var initval Constant
-		switch sym.gtype {
-		case "int":
-			ival, _ := strconv.Atoi(initstr)
-			initval =& IntegerConstant{
-				ival: ival,
-			}
-		default:
-			putError("Acceptable global variable is int, but got %s", sym.gtype)
-		}
-		sym.nSpace.(*GlobalVariable).initval = initval
-
-		/*
-		return &GlobalDeclaration{
-			sym  : sym,
-		}
-		*/
-	default:
-		putError("Expected var, but got %s.", tok.sval)
-		return
 	}
+	consumeToken(";")
+
+	var initval Constant
+	switch sym.gtype {
+	case "int":
+		ival, _ := strconv.Atoi(initstr)
+		initval =& IntegerConstant{
+			ival: ival,
+		}
+	default:
+		putError("Acceptable global variable is int, but got %s", sym.gtype)
+	}
+	sym.nSpace.(*GlobalVariable).initval = initval
+
+	/*
+	return &GlobalDeclaration{
+		sym  : sym,
+	}
+	*/
 }
 
 
@@ -264,7 +240,8 @@ func parseStatement() Ast {
 	}
 }
 
-func parseDeclarationStatement() Ast {
+func parseDeclarationStatementCommon() *Symbol {
+
 	tok := lookahead(1)
 	switch {
 	case tok.isEOF():
@@ -285,29 +262,33 @@ func parseDeclarationStatement() Ast {
 		}
 		sym := makeSymbol(tok2.sval, tok3.sval)
 		nextToken()
-
-		tok4 := lookahead(1)
-		if tok4.isPunct("=") {
-			id := &Identifier {
-				symbol: sym,
-			}
-			ast := parseAssignmentExpressionRightHand(id)
-			consumeToken(";")
-			return &DeclarationStatement{
-				sym   : sym,
-				assign: ast,
-			}
-		}
-		consumeToken(";")
-		return &DeclarationStatement{
-			sym  : sym,
-			assign: nil,
-		}
+		return sym
 	default:
 		putError("Expected var, but got %s.", tok.sval)
 		return nil
 	}
 	return nil
+}
+
+func parseDeclarationStatement() Ast {
+	sym := parseDeclarationStatementCommon()
+	tok := lookahead(1)
+	if tok.isPunct("=") {
+		id := &Identifier {
+			symbol: sym,
+		}
+		ast := parseAssignmentExpressionRightHand(id)
+		consumeToken(";")
+		return &DeclarationStatement{
+			sym   : sym,
+			assign: ast,
+		}
+	}
+	consumeToken(";")
+	return &DeclarationStatement{
+		sym  : sym,
+		assign: nil,
+	}
 }
 
 func parseExpression() Ast {
