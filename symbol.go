@@ -44,7 +44,7 @@ func (gv *GlobalVariable) emitRightValue(sym *Symbol) {
 }
 // implements NameSpace
 func (gv *GlobalVariable) emitLeftValue(sym *Symbol) {
-	emitCode("\tpushq\t_%s(%%rip)", sym.name)
+	emitCode("\tpushq\t_%s@GOTPCREL(%%rip)", sym.name)
 }
 
 

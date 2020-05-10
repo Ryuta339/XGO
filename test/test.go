@@ -29,6 +29,7 @@ func f3 () {
 var gi int = 30200
 
 func f4 () {
+	gi = gi + 3
 	printf ("%d\n", gi)
 }
 
