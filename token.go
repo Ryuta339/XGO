@@ -373,6 +373,35 @@ func readChar() string {
 	return string([]byte{c})
 }
 
+func skipLine() {
+	for {
+		c, err := bStream.getc()
+		if err != nil || isNewLine(c) {
+			bStream.ungetc()
+			return
+		}
+	}
+}
+
+func skipBlockComment() {
+	prev, err := bStream.getc()
+	if err != nil {
+		bStream.ungetc()
+		return
+	}
+
+	for {
+		c, err := bStream.getc()
+		if err != nil {
+			putError("Premature end of block comment")
+		}
+		if prev == '*' && c == '/' {
+			return
+		}
+		prev = c
+	}
+}
+
 func tokenize(filename string) {
 	s := readFile(filename)
 	var r []*Token
@@ -418,6 +447,20 @@ func tokenize(filename string) {
 			}
 			skipNewLine()
 			continue
+		case c == '/':
+			c, _ = bStream.getc()
+			if c == '/' {
+				skipLine()
+				continue
+			} else if c == '*' {
+				skipBlockComment()
+				continue
+			} else if c == '=' {
+				tok = &Token{typ: "punct", sval: "/="}
+			} else {
+				bStream.ungetc()
+				tok = &Token{typ: "punct", sval: "/"}
+			}
 		case isPunctuation(c):
 			tok = &Token{typ: "punct", sval: fmt.Sprintf("%c", c)}
 		case c == '=':

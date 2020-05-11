@@ -8,12 +8,16 @@ import (
 
 
 func f1 () {
+	// this is a comment
 	puts ("")
 	puts ("hello")
 	puts ("world")
 }
 
 func f2 () {
+	/* 
+	 * this is a block comment
+	 */
 	var i int
 	i = 3
 	printf ("%d\n", i)
@@ -22,7 +26,7 @@ func f2 () {
 func f3 () {
 	var j int = 5
 	var k int = 6
-	printf ("%d\n", j + k)
+	printf ("%d\n", j + k) // this is a comment
 }
 
 
