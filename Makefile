@@ -8,8 +8,8 @@ xgo: *.go
 tmp.s: xgo test/test.go
 	./xgo test/test.go > $(BIN)/$@
 
-tmp.out: $(BIN)/tmp.s
-	gcc -o $(BIN)/$@ $^
+tmp.out: tmp.s
+	gcc -o $(BIN)/$@ $(BIN)/$^
 
 
 .PHONY: clean

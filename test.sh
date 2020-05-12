@@ -23,8 +23,7 @@ function test {
 }
 
 function run_test_go {
-	./${prog_name} ./test/test.go > $s_file
-	gcc -o ./out/tmp.out $s_file
+	make tmp.out
 	./out/tmp.out > ./out/actual.txt
 	diff ./out/actual.txt ./test/expected.txt
 }
