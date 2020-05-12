@@ -9,6 +9,7 @@ var stringIndex = 0
 var stringList []*AstString
 
 func parse() Ast {
+	currentScope = globalScope
 	return parseTranslationUnit()
 }
 
@@ -30,7 +31,7 @@ func parseTranslationUnit() Ast {
 				packname:   packname,
 				packages:   packages,
 				childs:     childs,
-				globalvars: globalsymlist,
+				globalvars: getGlobalSymList(),
 			}
 		case tok.isReserved("func"):
 			ast := parseFunctionDefinition()
@@ -45,7 +46,7 @@ func parseTranslationUnit() Ast {
 		packname:   packname,
 		packages:   packages,
 		childs:     childs,
-		globalvars: globalsymlist,
+		globalvars: getGlobalSymList(),
 	}
 }
 
@@ -469,7 +470,7 @@ func parseIdentifier() *Identifier {
 		debugToken(tok)
 	case tok.isTypeIdentifier():
 		nextToken()
-		sym := findSymbol(tok.sval)
+		sym := currentScope.findSymbol(tok.sval)
 
 		if sym == nil {
 			// sym = makeSymbol(tok.sval)
@@ -489,7 +490,7 @@ func parseIdentifier() *Identifier {
 func parseIdentifierOrFuncall() Ast {
 	tok := lookahead(1)
 	name := tok.sval
-	if isDeclaredSymbol(name) {
+	if currentScope.isDeclaredSymbol(name) {
 		return parseIdentifier()
 	}
 	nextToken()

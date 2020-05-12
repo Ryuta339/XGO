@@ -6,7 +6,7 @@ xgo: *.go
 	$(CC) -o $@ $^
 
 tmp.s: xgo test/test.go
-	./xgo test/test > $(BIN)/$@
+	./xgo test/test.go > $(BIN)/$@
 
 tmp.out: $(BIN)/tmp.s
 	gcc -o $(BIN)/$@ $^

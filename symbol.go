@@ -9,7 +9,6 @@ type Symbol interface {
 }
 
 type SymbolBase struct {
-	pos   int
 	name  string
 	gtype string
 }
@@ -68,14 +67,57 @@ func (gv *GlobalVariable) getName() string {
 
 /* ================================ */
 
-var symbolDepth int = 0
+type Scope struct {
+	symenv map[string]Symbol
+	outer  *Scope
+	offset int
+}
 
-var globalsymlist []*GlobalVariable = make([]*GlobalVariable, 0)
-var globalsymenv map[string]*GlobalVariable = make(map[string]*GlobalVariable)
+func (sc *Scope) findSymbol(name string) Symbol {
+	for s := sc; s != nil; s = s.outer {
+		sym := s.symenv[name]
+		if sym != nil {
+			return sym
+		}
+	}
+	putError("Undefined symbol %s.\n", name)
+	return nil
+}
 
-var localsymlist []*LocalVariable
-var localsymenv map[string]*LocalVariable
-var localsymOffset int
+func (sc *Scope) setSymbol(name string, sym Symbol) {
+	sc.symenv[name] = sym
+}
+
+func (sc *Scope) isDeclaredSymbol(name string) bool {
+	for s := sc; s != nil; s = s.outer {
+		sym := s.symenv[name]
+		if sym != nil {
+			return true
+		}
+	}
+	return false
+}
+
+func newLocalScope(outer *Scope) *Scope {
+	var offset int = 8
+	if outer.offset != -1 {
+		offset = outer.offset
+	}
+	return &Scope{
+		outer:  outer,
+		symenv: make(map[string]Symbol),
+		offset: offset,
+	}
+}
+
+var globalScope *Scope = &Scope{
+	outer:  nil,
+	symenv: make(map[string]Symbol),
+	offset: -1,
+}
+var currentScope *Scope
+
+/* ================================ */
 
 func makeSymbol(name string, gtype string) Symbol {
 	var offset int = 8
@@ -90,71 +132,55 @@ func makeSymbol(name string, gtype string) Symbol {
 	case "uint64", "int64", "uintptr", "double":
 		offset = 16
 	}
-	if symbolDepth == 0 {
+
+	if currentScope.outer == nil {
 		// global variable
-		gv := &GlobalVariable{
+		sym = &GlobalVariable{
 			SymbolBase: SymbolBase{
-				pos:   len(globalsymlist) + 1,
 				name:  name,
 				gtype: gtype,
 			},
 		}
-		globalsymlist = append(globalsymlist, gv)
-		globalsymenv[name] = gv
-		sym = gv
+		// globalsymenv[name] = gv
+		// sym = gv
 	} else {
 		// local variable
-		lv := &LocalVariable{
+		sym = &LocalVariable{
 			SymbolBase: SymbolBase{
-				pos:   len(localsymlist) + 1,
 				name:  name,
 				gtype: gtype,
 			},
-			offset: localsymOffset,
+			offset: currentScope.offset,
 		}
-		localsymOffset += offset
-		localsymlist = append(localsymlist, lv)
-		localsymenv[name] = lv
-		sym = lv
+		currentScope.offset += offset
+		// localsymenv[name] = lv
+		// sym = lv
 	}
+	currentScope.setSymbol(name, sym)
 	return sym
 }
 
-func findSymbol(name string) Symbol {
-	for _, sym := range localsymlist {
-		if sym.name == name {
-			return sym
-		}
-	}
-	for _, sym := range globalsymlist {
-		if sym.name == name {
-			return sym
-		}
-	}
-	putError("Undefined symbol %s.\n", name)
-	return nil
-}
-
-func isDeclaredSymbol(name string) bool {
-	_, okL := localsymenv[name]
-	_, okG := globalsymenv[name]
-	return okL || okG
-}
-
 func beginSymbolBlock() {
-	localsymlist = make([]*LocalVariable, 0)
-	localsymenv = make(map[string]*LocalVariable)
-	localsymOffset = 8
-	symbolDepth++
+	currentScope = newLocalScope(currentScope)
 }
 
 func endSymbolBlock() []*LocalVariable {
-	if symbolDepth == 0 {
+	if currentScope.outer == nil {
 		putError("Out of block")
 		return nil
 	}
-	symbolDepth--
-	tmp := localsymlist
-	localsymlist = nil
-	return tmp
+	var lvs []*LocalVariable
+	for _, sym := range currentScope.symenv {
+		lvs = append(lvs, sym.(*LocalVariable))
+	}
+	currentScope = currentScope.outer
+	return lvs
+}
+
+func getGlobalSymList() []*GlobalVariable {
+	var gvs []*GlobalVariable
+	for _, sym := range globalScope.symenv {
+		gvs = append(gvs, sym.(*GlobalVariable))
+	}
+	return gvs
 }
