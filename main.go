@@ -9,14 +9,14 @@ import (
 var errorFlag = false
 var astMode = false
 var tokenMode = false
+var sourceFile string
 
 func putError(errorMsg string, v ...interface{}) {
-	fmt.Fprintf(os.Stderr, "\x1b[31m")
-	fmt.Fprintf(os.Stderr, errorMsg, v...)
-	fmt.Fprintf(os.Stderr, "\x1b[39m\n")
+	s := fmt.Sprintf("\x1b[31m"+errorMsg, v...)
+	s += " [" + sourceFile + "]\x1b[39m\n"
 	// 	errorFlag = true
-	renderTokens()
-	panic("internal error")
+	// renderTokens()
+	panic(s)
 }
 
 func parseOptions(args []string) string {
@@ -42,7 +42,6 @@ func parseOptions(args []string) string {
 }
 
 func main() {
-	var sourceFile string
 	if len(os.Args) > 1 {
 		sourceFile = parseOptions(os.Args[1:len(os.Args)])
 	} else {
