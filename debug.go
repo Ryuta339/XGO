@@ -9,11 +9,17 @@ type Debuggable interface {
 	debug()
 }
 
-func debugPrint(s string) {
-	fmt.Fprintf(os.Stdout, "# %s\n", s)
+var debugOutput = os.Stdout
+
+func debugPrintf(format string, v... interface{}) {
+	debugPrintln(fmt.Sprintf(format, v...))
 }
-func debugPrintWithVariable(name string, v interface{}) {
-	debugPrint(fmt.Sprintf("%s=%v", name, v))
+
+func debugPrintln(s string) {
+	fmt.Fprintf(debugOutput, "# %s\n", s)
+}
+func debugPrintlnWithVariable(name string, v interface{}) {
+	debugPrintf("%s=%v", name, v)
 }
 
 func debugTokens(ts *TokenStream) {
@@ -22,7 +28,7 @@ func debugTokens(ts *TokenStream) {
 
 func debugToken(tok *Token) {
 	if tok == nil {
-		debugPrint("tok:nil")
+		debugPrintln("tok:nil")
 		return
 	}
 	tok.debug()

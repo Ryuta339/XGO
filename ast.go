@@ -66,7 +66,7 @@ func (tu *TranslationUnit) show(depth int) {
 
 // implements Ast
 func (tu *TranslationUnit) debug() {
-	debugPrint("ast.translation_unit")
+	debugPrintln("ast.translation_unit")
 	for _, child := range tu.childs {
 		child.debug()
 	}
@@ -95,7 +95,7 @@ func (gd *GlobalDeclaration) show(depth int) {
 
 // implements Ast
 func (gd *GlobalDeclaration) debug() {
-	debugPrint("ast.global_declaration")
+	debugPrintln("ast.global_declaration")
 }
 */
 
@@ -125,7 +125,7 @@ func (fd *FunctionDefinition) show(depth int) {
 
 // implements Ast
 func (fd *FunctionDefinition) debug() {
-	debugPrint(fmt.Sprintf("funcdef: %s", fd.fname))
+	debugPrintf("funcdef: %s", fd.fname)
 	fd.ast.debug()
 }
 
@@ -162,7 +162,7 @@ func (cs *CompoundStatement) emit() {
 
 // implements Ast
 func (cs *CompoundStatement) debug() {
-	debugPrint("ast.compound_statement")
+	debugPrintln("ast.compound_statement")
 	for _, statement := range cs.statements {
 		statement.debug()
 	}
@@ -192,7 +192,7 @@ func (s *Statement) emit() {
 
 // implements Ast
 func (s *Statement) debug() {
-	debugPrint("ast.statement")
+	debugPrintln("ast.statement")
 	s.ast.debug()
 }
 
@@ -221,7 +221,7 @@ func (ds *DeclarationStatement) emit() {
 
 // implements Ast
 func (ds *DeclarationStatement) debug() {
-	debugPrint("ast.declaration_statement")
+	debugPrintln("ast.declaration_statement")
 	if ds.assign != nil {
 		ds.assign.debug()
 	}
@@ -258,7 +258,7 @@ func (ae *AssignmentExpression) emit() {
 
 // implements Ast
 func (ae *AssignmentExpression) debug() {
-	debugPrint("ast.assignment_expression")
+	debugPrintln("ast.assignment_expression")
 	ae.left.debug()
 	ae.right.debug()
 }
@@ -297,7 +297,7 @@ func (ae *ArithmeticExpression) emit() {
 
 // implements Ast
 func (ae *ArithmeticExpression) debug() {
-	debugPrint("ast.arithmetic_expression")
+	debugPrintln("ast.arithmetic_expression")
 	ae.left.debug()
 	ae.right.debug()
 }
@@ -327,7 +327,7 @@ func (ue *UnaryExpression) emit() {
 
 // implements Ast
 func (ue *UnaryExpression) debug() {
-	debugPrint("ast.unary_expression")
+	debugPrintln("ast.unary_expression")
 	ue.operand.debug()
 }
 
@@ -353,7 +353,7 @@ func (pe *PrimaryExpression) emit() {
 
 // implements Ast
 func (pe *PrimaryExpression) debug() {
-	debugPrint("ast.primary_expression")
+	debugPrintln("ast.primary_expression")
 	pe.child.debug()
 }
 
@@ -379,7 +379,7 @@ func (ac *AstConstant) emit() {
 
 // implements Ast
 func (ac *AstConstant) debug() {
-	debugPrintWithVariable("ast.constant", ac.constant)
+	debugPrintlnWithVariable("ast.constant", ac.constant)
 }
 
 // implements Ast
@@ -408,7 +408,7 @@ func (id *Identifier) emit() {
 
 // implements Ast
 func (id *Identifier) debug() {
-	debugPrintWithVariable("ast.identifier", id.symbol.getName())
+	debugPrintlnWithVariable("ast.identifier", id.symbol.getName())
 }
 
 // implemebts Ast
@@ -472,7 +472,7 @@ func (fc *FunCall) emit() {
 
 // implements Ast
 func (fc *FunCall) debug() {
-	debugPrint("ast.funcall")
+	debugPrintln("ast.funcall")
 	for _, v := range fc.args {
 		v.debug()
 	}
@@ -505,7 +505,7 @@ func (as *AstString) emit() {
 
 // implement Ast
 func (as *AstString) debug() {
-	debugPrint("ast.string")
+	debugPrintln("ast.string")
 }
 
 // implements ast

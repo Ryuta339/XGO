@@ -57,7 +57,7 @@ type Token struct {
 
 // implements Debuggalbe
 func (tok *Token) debug() {
-	debugPrint(fmt.Sprintf("tok:type=%s, sval=%s", tok.typ, tok.sval))
+	debugPrintf("tok:type=%s, sval=%s", tok.typ, tok.sval)
 }
 
 // implements fmt.Stringer
@@ -181,19 +181,19 @@ func (ts *TokenStream) consumeToken(expected string) {
 func (ts *TokenStream) debug() {
 	for idx, tok := range ts.tokens {
 		if idx == ts.index {
-			debugPrint("\x1b[31m======== now parsing ========\x1b[39m")
+			debugPrintln("\x1b[31m======== now parsing ========\x1b[39m")
 		}
 		debugToken(tok)
 		if idx == ts.index {
-			debugPrint("\x1b[31m======== now parsing ========\x1b[39m")
+			debugPrintln("\x1b[31m======== now parsing ========\x1b[39m")
 		}
 	}
 }
 
 func (ts *TokenStream) renderTokens() {
-	debugPrint("==== Start Dump Tokens ====")
+	debugPrintln("==== Start Dump Tokens ====")
 	ts.debug()
-	debugPrint("==== End Dump Tokens ====")
+	debugPrintln("==== End Dump Tokens ====")
 }
 
 /* ================================ */
