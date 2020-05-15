@@ -18,8 +18,7 @@ func putError(errorMsg string, v ...interface{}) {
 	panic(s)
 }
 
-func parseOptions(args []string) string {
-	var sourceFile string
+func parseOptions(args []string) {
 	for _, opt := range args {
 		if opt == "-t" {
 			tokenMode = true
@@ -37,12 +36,11 @@ func parseOptions(args []string) string {
 	if sourceFile == "" {
 		putError("Unspecified source file.")
 	}
-	return sourceFile
 }
 
 func main() {
 	if len(os.Args) > 1 {
-		sourceFile = parseOptions(os.Args[1:len(os.Args)])
+		parseOptions(os.Args[1:len(os.Args)])
 	} else {
 		putError("Usaga: xgo [-a][-t] sourceFile")
 	}
