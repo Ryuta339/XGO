@@ -72,32 +72,6 @@ func (tu *TranslationUnit) debug() {
 	}
 }
 
-/* ================================
- * GlobalDeclaration
- *     implements Ast
- * ================================
-type GlobalDeclaration struct {
-	sym   *GlobalVariable
-}
-
-// implements Ast
-func (gd *GlobalDeclaration) emit() {
-	emitCode(".global %s", gd.sym.name)
-	emitCode("%s:", gd.sym.name)
-	emitCode(".long %s", gd.sym.nSpace.(*GlobalVariable).initval.toStringValue())
-}
-
-// implements Ast
-func (gd *GlobalDeclaration) show(depth int) {
-	printSpace(depth)
-	fmt.Printf("GlobalDeclaration(%s=%s)\n", gd.sym.name, gd.sym.nSpace.(*GlobalVariable).initval.toStringValue())
-}
-
-// implements Ast
-func (gd *GlobalDeclaration) debug() {
-	debugPrintln("ast.global_declaration")
-}
-*/
 
 /* ================================
  * Function Definition
@@ -283,7 +257,6 @@ type ArithmeticExpression struct {
 
 // implements Ast
 func (ae *ArithmeticExpression) emit() {
-	// emitCode (fmt.Sprintf ("\tmovl\t$%%d, %%%eax\n", ae.left.operand.ival))
 	// emitCode (fmt.Sprintf ("\tmovl\t$%d, %%ebx\n", ae.right.operand.ival))
 	ae.left.emit()
 	ae.right.emit()
@@ -321,7 +294,6 @@ type UnaryExpression struct {
 
 // implements Ast
 func (ue *UnaryExpression) emit() {
-	// emitCode ("\tpushq\t$%d", u.operand.ival)
 	ue.operand.emit()
 }
 
@@ -436,7 +408,7 @@ func (fc *FunCall) emit() {
 
 	// stacking paddings
 	var fh int
-	emitCode("# frame height %d before arguments", frameHeight)
+	// emitCode("# frame height %d before arguments", frameHeight)
 	// fh = (frameHeight + 8*len(fc.args)) % 16   // for argument
 	fh = frameHeight % 16
 	if fh != 0 {
@@ -454,7 +426,7 @@ func (fc *FunCall) emit() {
 		emitCode("\tpopq\t%%%s", regs[j])
 		frameHeight -= 8
 	}
-	emitCode("# frame height %d after arguments", frameHeight)
+	// emitCode("# frame height %d after arguments", frameHeight)
 	emitCode("\tmovq\t$0, %%rax")
 	emitCode("\tcallq\t_%s\t# frame height %d", fc.fname, frameHeight)
 

@@ -20,7 +20,6 @@ func emitDataSection() {
 
 func emitFuncPrologue(fname string) {
 	frameHeight = 8
-	// これ後で修正したい
 	emitCode(".text")
 	emitCode(".global _%s", fname)
 	emitCode("_%s:", fname)

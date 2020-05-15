@@ -471,7 +471,6 @@ func tokenize(filename string) {
 				tok = &Token{typ: "reserved", sval: sval}
 			} else {
 				tok = &Token{typ: "identifier", sval: sval}
-				// makeSymbol(sval, "int")
 			}
 		}
 		r = append(r, tok)

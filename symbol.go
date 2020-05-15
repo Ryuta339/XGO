@@ -141,8 +141,6 @@ func makeSymbol(name string, gtype string) Symbol {
 				gtype: gtype,
 			},
 		}
-		// globalsymenv[name] = gv
-		// sym = gv
 	} else {
 		// local variable
 		sym = &LocalVariable{
@@ -153,8 +151,6 @@ func makeSymbol(name string, gtype string) Symbol {
 			offset: currentScope.offset,
 		}
 		currentScope.offset += offset
-		// localsymenv[name] = lv
-		// sym = lv
 	}
 	currentScope.setSymbol(name, sym)
 	return sym

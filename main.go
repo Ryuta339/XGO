@@ -14,7 +14,6 @@ var sourceFile string
 func putError(errorMsg string, v ...interface{}) {
 	s := fmt.Sprintf("\x1b[31m"+errorMsg, v...)
 	s += " [" + sourceFile + "]\x1b[39m\n"
-	// 	errorFlag = true
 	// renderTokens()
 	panic(s)
 }
@@ -55,13 +54,6 @@ func main() {
 	if errorFlag {
 		panic("internal error")
 	}
-	/*
-		if debugMode {
-			debugPrint("==== Start Dump Ast ====")
-			debugAst(ast)
-			debugPrint("==== End Dump Ast ====")
-		}
-	*/
 	if astMode {
 		showAst(ast, 0)
 	} else {

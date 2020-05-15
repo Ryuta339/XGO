@@ -398,11 +398,6 @@ func parseUnaryExpression() Ast {
 		return nil
 	case tok.isTypeString(), tok.isTypeIdentifier(), tok.isTypeInt(), tok.isTypeRune():
 		ast = parsePrimaryExpression()
-		/*
-			return &UnaryExpression{
-				operand: ast,
-			}
-		*/
 		return ast
 	default:
 		putError("Unexpected token %v in parseUnaryExpression.\n", tok.sval)
@@ -473,7 +468,6 @@ func parseIdentifier() *Identifier {
 		sym := currentScope.findSymbol(tok.sval)
 
 		if sym == nil {
-			// sym = makeSymbol(tok.sval)
 			putError("Undefined variable %s.\n", tok.sval)
 		}
 
