@@ -17,6 +17,10 @@ type LeftValue interface {
 	emitLeft()
 }
 
+
+/*** registers for function arguments ***/
+var regs = []string{"rdi", "rsi", "rdx", "rcx", "r8", "r9"}
+
 /*** default functions ***/
 func printSpace(n int) {
 	fmt.Printf("%*s", n, "")
@@ -79,13 +83,28 @@ func (tu *TranslationUnit) debug() {
  * ================================ */
 type FunctionDefinition struct {
 	fname string
+	rettype string
+	params []*LocalVariable
 	ast   Ast
 }
 
 // implements Ast
 func (fd *FunctionDefinition) emit() {
 	emitFuncPrologue(fd.fname)
+	var stacksize int = 0
+	for _, v := range fd.params {
+		stacksize += v.size
+	}
+	for i, _ := range fd.params {
+		emitCode("\tpushq\t%%%s", regs[i])
+		frameHeight += 8
+	}
 	fd.ast.emit()
+	if stacksize > 0 {
+		emitCode("# free function argument stack area")
+		emitCode("\taddq\t$%d, %%rsp", stacksize)
+		frameHeight -= stacksize
+	}
 	emitCode("\tmovl\t$0, %%eax") // return 0
 	emitFuncEpilogue()
 }
@@ -114,10 +133,10 @@ type CompoundStatement struct {
 
 // implements Ast
 func (cs *CompoundStatement) emit() {
+	// ここでallocate するのはバグのもと！
 	var stacksize int = 0
 	for _, v := range cs.localvars {
-		// よくない
-		stacksize += v.offset
+		stacksize += v.size
 	}
 	if stacksize > 0 {
 		emitCode("# allocate stack area")
@@ -400,7 +419,6 @@ type FunCall struct {
 
 // implements Ast
 func (fc *FunCall) emit() {
-	var regs = []string{"rdi", "rsi", "rdx", "rcx", "r8", "r9"}
 	for i, _ := range fc.args {
 		emitCode("\tpushq\t%%%s", regs[i])
 		frameHeight += 8

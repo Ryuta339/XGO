@@ -173,20 +173,54 @@ func parseFunctionDefinition() Ast {
 	}
 	nextToken()
 	consumeToken("(")
-	// argument ?
+
+	beginSymbolBlock()
+
+PARSE_ARGUMENT_LIST_LOOP:
+	for {
+		tok := lookahead(1)
+		switch {
+		case tok.isPunct(")"):
+			break PARSE_ARGUMENT_LIST_LOOP
+		case tok.isTypeIdentifier():
+			nextToken()
+			tok2 := lookahead(1)
+			makeSymbol(tok.sval, tok2.sval)
+			nextToken()
+			tok3 := lookahead(1)
+			if tok3.isPunct(",") {
+				consumeToken(",")
+				continue
+			} else if tok3.isPunct(")") {
+				break PARSE_ARGUMENT_LIST_LOOP
+			} else {
+				putError ("Expected ) or \",\", but got %s.", tok3.sval)
+			}
+		default:
+			putError("Expected ) or identifier, but got %s.", tok.sval)
+		}
+	}
+
 	consumeToken(")")
 	// expect Type
 	tok2 := lookahead(1)
-	if !tok2.isPunct("{") {
-		putError("Expected {, but got %s", tok.sval)
-		return &FunctionDefinition{
-			fname: tok.sval,
-			ast:   nil,
-		}
+	var rettype string
+	if tok2.isTypeIdentifier() {
+		rettype = tok2.sval
+		nextToken()
+	} else {
+		rettype = "void"
+	}
+	tok3 := lookahead(1)
+	if !tok3.isPunct("{") {
+		putError("Expected {, but got %s", tok3.sval)
 	}
 	ast := parseCompoundStatement()
+	params := endSymbolBlock()
 	return &FunctionDefinition{
 		fname: tok.sval,
+		rettype: rettype,
+		params: params,
 		ast:   ast,
 	}
 }

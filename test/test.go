@@ -37,6 +37,10 @@ func f4 () {
 	printf ("%d\n", gi)
 }
 
+func f5 (a int, b int) {
+	printf ("%d\n", a + b)
+}
+
 func main () {
 	printf ("%d\n", 2 + 5)
 	printf ("%d\n", 10 - 4)
@@ -48,4 +52,5 @@ func main () {
 	f2 ()
 	f3 ()
 	f4 ()
+	f5 (1, 2)
 }
