@@ -11,7 +11,7 @@ type Debuggable interface {
 
 var debugOutput = os.Stdout
 
-func debugPrintf(format string, v... interface{}) {
+func debugPrintf(format string, v ...interface{}) {
 	debugPrintln(fmt.Sprintf(format, v...))
 }
 

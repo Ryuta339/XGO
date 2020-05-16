@@ -66,7 +66,6 @@ func (gv *GlobalVariable) getName() string {
 	return gv.name
 }
 
-
 /* ================================ */
 
 type Scope struct {

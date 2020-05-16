@@ -17,7 +17,6 @@ type LeftValue interface {
 	emitLeft()
 }
 
-
 /*** registers for function arguments ***/
 var regs = []string{"rdi", "rsi", "rdx", "rcx", "r8", "r9"}
 
@@ -76,16 +75,15 @@ func (tu *TranslationUnit) debug() {
 	}
 }
 
-
 /* ================================
  * Function Definition
  *     implements Ast
  * ================================ */
 type FunctionDefinition struct {
-	fname string
+	fname   string
 	rettype string
-	params []*LocalVariable
-	ast   Ast
+	params  []*LocalVariable
+	ast     Ast
 }
 
 // implements Ast

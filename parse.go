@@ -194,7 +194,7 @@ PARSE_ARGUMENT_LIST_LOOP:
 			} else if tok3.isPunct(")") {
 				break PARSE_ARGUMENT_LIST_LOOP
 			} else {
-				putError ("Expected ) or \",\", but got %s.", tok3.sval)
+				putError("Expected ) or \",\", but got %s.", tok3.sval)
 			}
 		default:
 			putError("Expected ) or identifier, but got %s.", tok.sval)
@@ -218,10 +218,10 @@ PARSE_ARGUMENT_LIST_LOOP:
 	ast := parseCompoundStatement()
 	params := endSymbolBlock()
 	return &FunctionDefinition{
-		fname: tok.sval,
+		fname:   tok.sval,
 		rettype: rettype,
-		params: params,
-		ast:   ast,
+		params:  params,
+		ast:     ast,
 	}
 }
 
