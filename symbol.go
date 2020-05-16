@@ -11,6 +11,7 @@ type Symbol interface {
 type SymbolBase struct {
 	name  string
 	gtype string
+	size  int
 }
 
 /* ================================
@@ -64,6 +65,7 @@ func (gv *GlobalVariable) emitLeftValue() {
 func (gv *GlobalVariable) getName() string {
 	return gv.name
 }
+
 
 /* ================================ */
 
@@ -120,17 +122,17 @@ var currentScope *Scope
 /* ================================ */
 
 func makeSymbol(name string, gtype string) Symbol {
-	var offset int = 8
+	var size int = 8
 	var sym Symbol
 	switch gtype {
 	case "uint8", "int8", "byte", "bool":
-		offset = 2
+		size = 2
 	case "uint16", "int16":
-		offset = 4
+		size = 4
 	case "uint32", "int32", "uint", "int", "rune", "float":
-		offset = 8
+		size = 8
 	case "uint64", "int64", "uintptr", "double":
-		offset = 16
+		size = 16
 	}
 
 	if currentScope.outer == nil {
@@ -139,6 +141,7 @@ func makeSymbol(name string, gtype string) Symbol {
 			SymbolBase: SymbolBase{
 				name:  name,
 				gtype: gtype,
+				size:  size,
 			},
 		}
 	} else {
@@ -147,10 +150,11 @@ func makeSymbol(name string, gtype string) Symbol {
 			SymbolBase: SymbolBase{
 				name:  name,
 				gtype: gtype,
+				size:  size,
 			},
 			offset: currentScope.offset,
 		}
-		currentScope.offset += offset
+		currentScope.offset += size
 	}
 	currentScope.setSymbol(name, sym)
 	return sym
