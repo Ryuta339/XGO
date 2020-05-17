@@ -5,6 +5,18 @@ import (
 	"io/ioutil"
 )
 
+type TokenType string
+
+const (
+	T_EOF         TokenType = "EOF"
+	T_INT         TokenType = "int"
+	T_STRING      TokenType = "string"
+	T_RUNE        TokenType = "rune"
+	T_IDENTIFIER  TokenType = "identifier"
+	T_PUNCTUATION TokenType = "punctuation"
+	T_RESERVED    TokenType = "reserved"
+)
+
 var reservedList = []string{
 	"break",
 	"default",
@@ -50,7 +62,7 @@ type SourceFile struct {
  *     implements Debuggable and fmt.Stringer
  * ================================ */
 type Token struct {
-	typ  string
+	typ  TokenType
 	sval string
 	SourceFile
 }
@@ -67,54 +79,54 @@ func (tok *Token) String() string {
 }
 
 func (tok *Token) isEOF() bool {
-	return tok == nil || tok.typ == "eof"
+	return tok != nil && tok.typ == T_EOF
 }
 
 func (tok *Token) isPunct(s string) bool {
-	return tok != nil && tok.typ == "punct" && tok.sval == s
+	return tok != nil && tok.typ == T_PUNCTUATION && tok.sval == s
 }
 
 func (tok *Token) isReserved(s string) bool {
-	return tok != nil && tok.typ == "reserved" && tok.sval == s
+	return tok != nil && tok.typ == T_RESERVED && tok.sval == s
 }
 
 func (tok *Token) isString(s string) bool {
-	return tok != nil && tok.typ == "string" && tok.sval == s
+	return tok != nil && tok.typ == T_STRING && tok.sval == s
 }
 
 func (tok *Token) isIdentifier(s string) bool {
-	return tok != nil && tok.typ == "identifier" && tok.sval == s
+	return tok != nil && tok.typ == T_IDENTIFIER && tok.sval == s
 }
 
 func (tok *Token) isTypePunct() bool {
-	return tok != nil && tok.typ == "punct"
+	return tok != nil && tok.typ == T_PUNCTUATION
 }
 
 func (tok *Token) isTypeReserved() bool {
-	return tok != nil && tok.typ == "keyword"
+	return tok != nil && tok.typ == T_RESERVED
 }
 
 func (tok *Token) isTypeString() bool {
-	return tok != nil && tok.typ == "string"
+	return tok != nil && tok.typ == T_STRING
 }
 
 func (tok *Token) isTypeIdentifier() bool {
-	return tok != nil && tok.typ == "identifier"
+	return tok != nil && tok.typ == T_IDENTIFIER
 }
 
 func (tok *Token) isTypeInt() bool {
-	return tok != nil && tok.typ == "int"
+	return tok != nil && tok.typ == T_INT
 }
 
 func (tok *Token) isTypeRune() bool {
-	return tok != nil && tok.typ == "rune"
+	return tok != nil && tok.typ == T_RUNE
 }
 
 func (tok *Token) isSemicolon() bool {
 	return tok.isPunct(";")
 }
 
-func newToken(typ string, sval string) *Token {
+func newToken(typ TokenType, sval string) *Token {
 	return &Token{
 		typ:  typ,
 		sval: sval,
@@ -127,7 +139,7 @@ func newToken(typ string, sval string) *Token {
 }
 
 var semicolon = &Token{
-	typ:  "punct",
+	typ:  T_PUNCTUATION,
 	sval: ";",
 }
 
@@ -159,7 +171,7 @@ func (ts *TokenStream) lookahead(num int) *Token {
 		return ts.tokens[idx]
 	}
 	return &Token{
-		typ:        "eof",
+		typ:        T_EOF,
 		sval:       "",
 		SourceFile: bStream.SourceFile,
 	}
@@ -427,13 +439,13 @@ func tokenize(filename string) {
 			return
 		case isNumber(c):
 			sval := readNumber(c)
-			tok = &Token{typ: "int", sval: sval}
+			tok = &Token{typ: T_INT, sval: sval}
 		case c == '\'':
 			sval := readChar()
-			tok = &Token{typ: "rune", sval: sval}
+			tok = &Token{typ: T_RUNE, sval: sval}
 		case c == '"':
 			sval := readString()
-			tok = &Token{typ: "string", sval: sval}
+			tok = &Token{typ: T_STRING, sval: sval}
 		case c == ' ' || c == '\t':
 			skipSpace()
 			continue
@@ -456,21 +468,21 @@ func tokenize(filename string) {
 				skipBlockComment()
 				continue
 			} else if c == '=' {
-				tok = &Token{typ: "punct", sval: "/="}
+				tok = &Token{typ: T_PUNCTUATION, sval: "/="}
 			} else {
 				bStream.ungetc()
-				tok = &Token{typ: "punct", sval: "/"}
+				tok = &Token{typ: T_PUNCTUATION, sval: "/"}
 			}
 		case isPunctuation(c):
-			tok = &Token{typ: "punct", sval: fmt.Sprintf("%c", c)}
+			tok = &Token{typ: T_PUNCTUATION, sval: fmt.Sprintf("%c", c)}
 		case c == '=':
-			tok = &Token{typ: "assignment", sval: fmt.Sprintf("%c", c)}
+			tok = &Token{typ: T_PUNCTUATION, sval: fmt.Sprintf("%c", c)}
 		default:
 			sval := readName(c)
 			if isReserved(sval) {
-				tok = &Token{typ: "reserved", sval: sval}
+				tok = &Token{typ: T_RESERVED, sval: sval}
 			} else {
-				tok = &Token{typ: "identifier", sval: sval}
+				tok = &Token{typ: T_IDENTIFIER, sval: sval}
 			}
 		}
 		r = append(r, tok)
