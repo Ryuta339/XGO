@@ -14,10 +14,10 @@ const (
 	T_RUNE        TokenType = "rune"
 	T_IDENTIFIER  TokenType = "identifier"
 	T_PUNCTUATION TokenType = "punctuation"
-	T_RESERVED    TokenType = "reserved"
+	T_KEYWORD     TokenType = "keyword"
 )
 
-var reservedList = []string{
+var keywordList = []string{
 	"break",
 	"default",
 	"func",
@@ -86,8 +86,8 @@ func (tok *Token) isPunct(s string) bool {
 	return tok != nil && tok.typ == T_PUNCTUATION && tok.sval == s
 }
 
-func (tok *Token) isReserved(s string) bool {
-	return tok != nil && tok.typ == T_RESERVED && tok.sval == s
+func (tok *Token) isKeyword(s string) bool {
+	return tok != nil && tok.typ == T_KEYWORD && tok.sval == s
 }
 
 func (tok *Token) isString(s string) bool {
@@ -102,8 +102,8 @@ func (tok *Token) isTypePunct() bool {
 	return tok != nil && tok.typ == T_PUNCTUATION
 }
 
-func (tok *Token) isTypeReserved() bool {
-	return tok != nil && tok.typ == T_RESERVED
+func (tok *Token) isTypeKeyword() bool {
+	return tok != nil && tok.typ == T_KEYWORD
 }
 
 func (tok *Token) isTypeString() bool {
@@ -146,7 +146,7 @@ var semicolon = &Token{
 func autoSemicolonInsert(last *Token) bool {
 	return last.isTypeIdentifier() ||
 		last.isTypeInt() || last.isTypeRune() || last.isTypeString() ||
-		last.isReserved("break") || last.isReserved("continue") || last.isReserved("fallthrough") || last.isReserved("return") ||
+		last.isKeyword("break") || last.isKeyword("continue") || last.isKeyword("fallthrough") || last.isKeyword("return") ||
 		last.isPunct("++") || last.isPunct("--") || last.isPunct(")") || last.isPunct("]") || last.isPunct("}")
 }
 
@@ -322,8 +322,8 @@ func readName(b byte) string {
 	}
 }
 
-func isReserved(word string) bool {
-	for _, v := range reservedList {
+func isKeyword(word string) bool {
+	for _, v := range keywordList {
 		if word == v {
 			return true
 		}
@@ -479,8 +479,8 @@ func tokenize(filename string) {
 			tok = &Token{typ: T_PUNCTUATION, sval: fmt.Sprintf("%c", c)}
 		default:
 			sval := readName(c)
-			if isReserved(sval) {
-				tok = &Token{typ: T_RESERVED, sval: sval}
+			if isKeyword(sval) {
+				tok = &Token{typ: T_KEYWORD, sval: sval}
 			} else {
 				tok = &Token{typ: T_IDENTIFIER, sval: sval}
 			}

@@ -33,10 +33,10 @@ func parseTranslationUnit() Ast {
 				childs:     childs,
 				globalvars: getGlobalSymList(),
 			}
-		case tok.isReserved("func"):
+		case tok.isKeyword("func"):
 			ast := parseFunctionDefinition()
 			childs = append(childs, ast)
-		case tok.isReserved("var"):
+		case tok.isKeyword("var"):
 			parseGlobalDeclaration()
 		default:
 			putError("func expected, but got %v.", tok.sval)
@@ -57,7 +57,7 @@ func parsePackageDeclaration() string {
 	switch {
 	case tok.isEOF():
 		putError("No package declaration.")
-	case tok.isReserved("package"):
+	case tok.isKeyword("package"):
 		consumeToken("package")
 		tok = lookahead(1)
 		if tok.isTypeIdentifier() {
@@ -82,7 +82,7 @@ func parseImport() []string {
 		switch {
 		case tok.isEOF():
 			return packages
-		case tok.isReserved("import"):
+		case tok.isKeyword("import"):
 			consumeToken("import")
 			ps := parseImportPackageNames()
 			packages = append(packages, ps...)
@@ -161,7 +161,7 @@ func parseGlobalDeclaration() {
 
 func parseFunctionDefinition() Ast {
 	tok := lookahead(1)
-	if !tok.isReserved("func") {
+	if !tok.isKeyword("func") {
 		putError("Expected func, but got %s", tok.typ)
 		return nil
 	}
@@ -255,7 +255,7 @@ func parseStatement() Ast {
 	switch {
 	case tok.isPunct("{"):
 		ast = parseCompoundStatement()
-	case tok.isReserved("var"):
+	case tok.isKeyword("var"):
 		ast = parseDeclarationStatement()
 	default:
 		ast = parseExpression()
@@ -273,7 +273,7 @@ func parseDeclarationStatementCommon() Symbol {
 	switch {
 	case tok.isEOF():
 		return nil
-	case tok.isReserved("var"):
+	case tok.isKeyword("var"):
 		consumeToken("var")
 		tok2 := lookahead(1)
 		if !tok2.isTypeIdentifier() {
@@ -450,7 +450,7 @@ func parsePrimaryExpression() Ast {
 		return &PrimaryExpression{
 			child: ast,
 		}
-	case tok.isTypeIdentifier(), tok.isTypeReserved():
+	case tok.isTypeIdentifier(), tok.isTypeKeyword():
 		ast := parseIdentifierOrFuncall()
 		return ast
 	default:
