@@ -166,6 +166,7 @@ func parseFunctionDefinition() Ast {
 		return nil
 	}
 	consumeToken("func")
+	beginFunction()
 	tok = lookahead(1)
 	if !tok.isTypeIdentifier() {
 		putError("Expected identifier, but got %s", tok.typ)
@@ -217,11 +218,13 @@ PARSE_ARGUMENT_LIST_LOOP:
 	}
 	ast := parseCompoundStatement()
 	params := endSymbolBlock()
+	space := endFunction()
 	return &FunctionDefinition{
 		fname:   tok.sval,
 		rettype: rettype,
 		params:  params,
 		ast:     ast,
+		space:   space,
 	}
 }
 

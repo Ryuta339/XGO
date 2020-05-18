@@ -84,6 +84,7 @@ type FunctionDefinition struct {
 	rettype string
 	params  []*LocalVariable
 	ast     Ast
+	space   int
 }
 
 // implements Ast
@@ -97,10 +98,16 @@ func (fd *FunctionDefinition) emit() {
 		emitCode("\tpushq\t%%%s", regs[i])
 		frameHeight += 8
 	}
+	if fd.space > 0 {
+		emitCode("# allocate local variable area")
+		emitCode("\tsubq\t$%d,\t%%rsp", fd.space)
+		frameHeight += fd.space
+		stacksize += fd.space
+	}
 	fd.ast.emit()
 	if stacksize > 0 {
-		emitCode("# free function argument stack area")
-		emitCode("\taddq\t$%d, %%rsp", stacksize)
+		emitCode("# free function argument and local variable area")
+		emitCode("\taddq\t$%d,\t%%rsp", stacksize)
 		frameHeight -= stacksize
 	}
 	emitCode("\tmovl\t$0, %%eax") // return 0
@@ -131,23 +138,8 @@ type CompoundStatement struct {
 
 // implements Ast
 func (cs *CompoundStatement) emit() {
-	// ここでallocate するのはバグのもと！
-	var stacksize int = 0
-	for _, v := range cs.localvars {
-		stacksize += v.size
-	}
-	if stacksize > 0 {
-		emitCode("# allocate stack area")
-		emitCode("\tsubq\t$%d, %%rsp", stacksize)
-		frameHeight += stacksize
-	}
 	for _, statement := range cs.statements {
 		statement.emit()
-	}
-	if stacksize > 0 {
-		emitCode("# free stack area")
-		emitCode("\taddq\t$%d, %%rsp", stacksize)
-		frameHeight -= stacksize
 	}
 }
 

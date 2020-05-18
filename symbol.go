@@ -159,6 +159,8 @@ func makeSymbol(name string, gtype string) Symbol {
 	return sym
 }
 
+var localVariableSpace int
+
 func beginSymbolBlock() {
 	currentScope = newLocalScope(currentScope)
 }
@@ -172,8 +174,20 @@ func endSymbolBlock() []*LocalVariable {
 	for _, sym := range currentScope.symenv {
 		lvs = append(lvs, sym.(*LocalVariable))
 	}
+
+	if localVariableSpace < currentScope.offset-8 {
+		localVariableSpace = currentScope.offset - 8
+	}
 	currentScope = currentScope.outer
 	return lvs
+}
+
+func beginFunction() {
+	localVariableSpace = 0
+}
+
+func endFunction() int {
+	return localVariableSpace
 }
 
 func getGlobalSymList() []*GlobalVariable {

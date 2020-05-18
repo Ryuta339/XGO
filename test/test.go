@@ -41,6 +41,21 @@ func f5 (a int, b int) {
 	printf ("%d\n", a + b)
 }
 
+func f6 (a int, b int) {
+	var c int = 3
+	var d int = 4
+	printf ("%d\n", a + b + c + d)
+}
+
+func f7 (a int) {
+	var b int = 2
+	{
+		var c int = 3
+		printf("%d\n", a + b * c)
+	}
+	printf("%d\n", a + b)
+}
+
 func main () {
 	printf ("%d\n", 2 + 5)
 	printf ("%d\n", 10 - 4)
@@ -53,4 +68,6 @@ func main () {
 	f3 ()
 	f4 ()
 	f5 (1, 2)
+	f6 (1, 2)
+	f7 (1)
 }
