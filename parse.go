@@ -537,6 +537,8 @@ func parseIdentifierOrFuncall() Ast {
 			fname: name,
 			args:  args,
 		}
+	default:
+		putError("Undeclared identifier %s.", name)
 	}
 
 	fmt.Println("TBD")
