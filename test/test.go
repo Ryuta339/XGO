@@ -56,7 +56,7 @@ func f7 (a int) {
 	printf("%d\n", a + b)
 	{
 		var d int
-		printf("%d\n", a + b * d)
+		printf("%d\n", a + b + d)
 	}
 }
 

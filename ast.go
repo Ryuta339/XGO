@@ -138,6 +138,9 @@ type CompoundStatement struct {
 
 // implements Ast
 func (cs *CompoundStatement) emit() {
+	for _, v := range cs.localvars {
+		emitCode ("\tmovq\t$0,\t-%d(%%rbp)", v.offset)
+	}
 	for _, statement := range cs.statements {
 		statement.emit()
 	}
