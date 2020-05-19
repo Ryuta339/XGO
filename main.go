@@ -14,7 +14,7 @@ var sourceFile string
 func putError(errorMsg string, v ...interface{}) {
 	s := fmt.Sprintf("\x1b[31m"+errorMsg, v...)
 	s += " [" + sourceFile + "]\x1b[39m\n"
-	// renderTokens()
+	renderTokens()
 	panic(s)
 }
 

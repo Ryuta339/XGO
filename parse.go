@@ -262,7 +262,14 @@ func parseStatement() Ast {
 		ast = parseDeclarationStatement()
 	default:
 		ast = parseExpression()
-		consumeToken(";")
+		tok2 := lookahead(1)
+		switch {
+		case tok2.isPunct("="):
+			ast = parseAssignmentExpressionRightHand(ast)
+			consumeToken(";")
+		default:
+			consumeToken(";")
+		}
 	}
 
 	return &Statement{
@@ -321,16 +328,6 @@ func parseDeclarationStatement() Ast {
 	}
 }
 
-func parseExpression() Ast {
-	ast := parseAssignmentExpression()
-	return ast
-}
-
-func parseAssignmentExpression() Ast {
-	var ast Ast = parseAdditiveExpression()
-	return parseAssignmentExpressionRightHand(ast)
-}
-
 func parseAssignmentExpressionRightHand(ast Ast) Ast {
 	tok := lookahead(1)
 	switch {
@@ -355,6 +352,11 @@ func parseAssignmentExpressionRightHand(ast Ast) Ast {
 	default:
 		return ast
 	}
+	return ast
+}
+
+func parseExpression() Ast {
+	ast := parseAdditiveExpression()
 	return ast
 }
 
@@ -437,7 +439,7 @@ func parseUnaryExpression() Ast {
 		ast = parsePrimaryExpression()
 		return ast
 	default:
-		putError("Unexpected token %v in parseUnaryExpression.\n", tok.sval)
+		putError("Unexpected token %v in parseUnaryExpression.", tok.sval)
 	}
 
 	return nil
