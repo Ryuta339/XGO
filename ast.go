@@ -21,8 +21,8 @@ type LeftValue interface {
 var regs = []string{"rdi", "rsi", "rdx", "rcx", "r8", "r9"}
 
 /*** default functions ***/
-func printSpace(n int) {
-	fmt.Printf("%*s", n, "")
+func printSpace(n int) string {
+	return fmt.Sprintf("%*s", n, "")
 }
 
 func showAst(ast Ast, depth int) {
@@ -56,12 +56,13 @@ func (tu *TranslationUnit) emit() {
 
 // implements Ast
 func (tu *TranslationUnit) show(depth int) {
-	printSpace(depth)
-	fmt.Printf("TranslationUnit (%s) {\n", tu.packname)
+	str := printSpace(depth)
+	str += fmt.Sprintf("TranslationUnit (%s) {\n", tu.packname)
 	for _, pkg := range tu.packages {
-		fmt.Printf("(import \"%s\")\n", pkg)
+		str += fmt.Sprintf("(import \"%s\")\n", pkg)
 	}
-	fmt.Printf("}\n")
+	str += fmt.Sprintf("}\n")
+	debugPrint(str)
 	for _, child := range tu.childs {
 		child.show(depth + 1)
 	}
@@ -90,8 +91,9 @@ func (gd *GlobalDeclaration) emit() {
 
 // implements Ast
 func (gd *GlobalDeclaration) show(depth int) {
-	printSpace(depth)
-	fmt.Printf("GlobalDeclaration")
+	str := printSpace(depth)
+	str += fmt.Sprintf("GlobalDeclaration")
+	debugPrint(str)
 }
 
 // implemnts Ast
@@ -140,8 +142,9 @@ func (fd *FunctionDefinition) emit() {
 
 // implements Ast
 func (fd *FunctionDefinition) show(depth int) {
-	printSpace(depth)
-	fmt.Printf("FunctionDefinition(%s)\n", fd.fname)
+	str := printSpace(depth)
+	str += fmt.Sprintf("FunctionDefinition(%s)\n", fd.fname)
+	debugPrint(str)
 	fd.ast.show(depth + 1)
 }
 
@@ -180,8 +183,9 @@ func (cs *CompoundStatement) debug() {
 
 // implements Ast
 func (cs *CompoundStatement) show(depth int) {
-	printSpace(depth)
-	fmt.Printf("CompoundStatement\n")
+	str := printSpace(depth)
+	str += fmt.Sprintf("CompoundStatement\n")
+	debugPrint(str)
 	for _, ast := range cs.statements {
 		ast.show(depth + 1)
 	}
@@ -208,8 +212,9 @@ func (s *Statement) debug() {
 
 // implements Ast
 func (s *Statement) show(depth int) {
-	printSpace(depth)
-	fmt.Printf("Statement\n")
+	str := printSpace(depth)
+	str += fmt.Sprintf("Statement\n")
+	debugPrint(str)
 	s.ast.show(depth + 1)
 }
 
@@ -239,8 +244,9 @@ func (ds *DeclarationStatement) debug() {
 
 // implements Ast
 func (ds *DeclarationStatement) show(depth int) {
-	printSpace(depth)
-	fmt.Printf("DeclarationStatement(%s)\n", ds.sym.name)
+	str := printSpace(depth)
+	str += fmt.Sprintf("DeclarationStatement(%s)\n", ds.sym.name)
+	debugPrint(str)
 	if ds.assign != nil {
 		ds.assign.show(depth + 1)
 	}
@@ -275,8 +281,9 @@ func (ae *AssignmentExpression) debug() {
 
 //implements Ast
 func (ae *AssignmentExpression) show(depth int) {
-	printSpace(depth)
-	fmt.Printf("AssignmentExpression\n")
+	str := printSpace(depth)
+	str += fmt.Sprintf("AssignmentExpression\n")
+	debugPrint(str)
 	ae.left.show(depth + 1)
 	ae.right.show(depth + 1)
 }
@@ -313,8 +320,8 @@ func (ae *ArithmeticExpression) debug() {
 
 // implements Ast
 func (ae *ArithmeticExpression) show(depth int) {
-	printSpace(depth)
-	fmt.Printf("ArithemeticExpression\n")
+	str := printSpace(depth)
+	str += fmt.Sprintf("ArithemeticExpression\n")
 	ae.left.show(depth + 1)
 	ae.right.show(depth + 1)
 }
@@ -341,8 +348,9 @@ func (ue *UnaryExpression) debug() {
 
 // implements Ast
 func (ue *UnaryExpression) show(depth int) {
-	printSpace(depth)
-	fmt.Printf("UnaryExpression\n")
+	str := printSpace(depth)
+	str += fmt.Sprintf("UnaryExpression\n")
+	debugPrint(str)
 	ue.operand.show(depth + 1)
 }
 
@@ -367,8 +375,9 @@ func (pe *PrimaryExpression) debug() {
 
 // implements Ast
 func (pe *PrimaryExpression) show(depth int) {
-	printSpace(depth)
-	fmt.Printf("PrimaryExpression\n")
+	str := printSpace(depth)
+	str += fmt.Sprintf("PrimaryExpression\n")
+	debugPrint(str)
 	pe.child.show(depth + 1)
 }
 
@@ -392,8 +401,9 @@ func (ac *AstConstant) debug() {
 
 // implements Ast
 func (ac *AstConstant) show(depth int) {
-	printSpace(depth)
-	fmt.Printf("AstConstant (%s)\n", ac.constant.toStringValue())
+	str := printSpace(depth)
+	str += fmt.Sprintf("AstConstant (%s)\n", ac.constant.toStringValue())
+	debugPrint(str)
 }
 
 /* ================================
@@ -421,8 +431,9 @@ func (id *Identifier) debug() {
 
 // implemebts Ast
 func (id *Identifier) show(depth int) {
-	printSpace(depth)
-	fmt.Printf("Identifier(%s)\n", id.symbol.getName())
+	str := printSpace(depth)
+	str += fmt.Sprintf("Identifier(%s)\n", id.symbol.getName())
+	debugPrint(str)
 }
 
 /* ================================
@@ -487,8 +498,9 @@ func (fc *FunCall) debug() {
 
 // implements Ast
 func (fc *FunCall) show(depth int) {
-	printSpace(depth)
-	fmt.Printf("FunCall\n")
+	str := printSpace(depth)
+	str += fmt.Sprintf("FunCall\n")
+	debugPrint(str)
 	for _, v := range fc.args {
 		v.show(depth + 1)
 	}
@@ -517,6 +529,7 @@ func (as *AstString) debug() {
 
 // implements ast
 func (as *AstString) show(depth int) {
-	printSpace(depth)
-	fmt.Printf("AstString (\"%s\")\n", as.sval)
+	str := printSpace(depth)
+	str += fmt.Sprintf("AstString (\"%s\")\n", as.sval)
+	debugPrint(str)
 }

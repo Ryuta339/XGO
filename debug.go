@@ -18,6 +18,11 @@ func debugPrintf(format string, v ...interface{}) {
 func debugPrintln(s string) {
 	fmt.Fprintf(debugOutput, "# %s\n", s)
 }
+
+func debugPrint(s string) {
+	fmt.Fprintf(debugOutput, "# %s", s)
+}
+
 func debugPrintlnWithVariable(name string, v interface{}) {
 	debugPrintf("%s=%v", name, v)
 }
