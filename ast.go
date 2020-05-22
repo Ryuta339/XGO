@@ -76,6 +76,30 @@ func (tu *TranslationUnit) debug() {
 }
 
 /* ================================
+ * GlobalDeclaration
+ *     implements Ast
+ * ================================ */
+type GlobalDeclaration struct {
+	sym *GlobalVariable
+}
+
+// implements Ast
+func (gd *GlobalDeclaration) emit() {
+	// do nothing
+}
+
+// implements Ast
+func (gd *GlobalDeclaration) show(depth int) {
+	printSpace(depth)
+	fmt.Printf("GlobalDeclaration")
+}
+
+// implemnts Ast
+func (gd *GlobalDeclaration) debug() {
+	debugPrintln("ast.global_declaration")
+}
+
+/* ================================
  * Function Definition
  *     implements Ast
  * ================================ */

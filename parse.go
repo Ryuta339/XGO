@@ -37,7 +37,8 @@ func parseTranslationUnit() Ast {
 			ast := parseFunctionDefinition()
 			childs = append(childs, ast)
 		case tok.isKeyword("var"):
-			parseGlobalDeclaration()
+			ast := parseGlobalDeclaration()
+			childs = append(childs, ast)
 		default:
 			putError("func expected, but got %v.", tok.sval)
 		}
@@ -133,8 +134,13 @@ func parseImportParenthesis() []string {
 	}
 }
 
-func parseGlobalDeclaration() {
+func parseGlobalDeclaration() Ast {
 	sym := parseDeclarationStatementCommon().(*GlobalVariable)
+	if sym==nil {
+		return &GlobalDeclaration{
+			sym: nil,
+		}
+	}
 	tok := lookahead(1)
 
 	initstr := "0"
@@ -157,7 +163,11 @@ func parseGlobalDeclaration() {
 		putError("Acceptable global variable is int, but got %s", sym.gtype)
 	}
 	sym.initval = initval
+	return &GlobalDeclaration{
+		sym: sym,
+	}
 }
+
 
 func parseFunctionDefinition() Ast {
 	tok := lookahead(1)
